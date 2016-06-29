@@ -1,0 +1,44 @@
+
+
+{% extends "index.html" %}
+
+{% block content %}
+
+
+          <h2 class="sub-header">Repos Stats</h2>
+
+
+
+          <h2 class="sub-header">All Repos</h2>
+
+
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Repo. name</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+
+                </tr>
+              </thead>
+              <tbody>
+               {% for repo in repo_list %}
+               <tr>
+                 <td>{{ escape(repo['Name']) }}</td>
+                 <td>{{ repo['Status'] }}</td>
+                 <td>{{ repo['Actions'] }}</td>
+
+               </tr>
+
+               {% end %}
+
+
+
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+{% end %}
