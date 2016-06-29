@@ -5,19 +5,22 @@
 {% block content %}
 
 
-          <h2 class="sub-header">Repos Stats</h2>
 
+{%  if alert!='' %}
 
+<div class="alert alert-{{ atype }} alert-dismissible">
+  {% raw alert %}
+</div>
 
-          <h2 class="sub-header">All Repos</h2>
-
+{% end %}
 
           <div class="table-responsive">
             <table class="table table-striped">
               <thead>
                 <tr>
-                  <th>Repo. name</th>
-                  <th>Status</th>
+
+                  <th>Repository</th>
+                  <th>Last modified</th>
                   <th>Actions</th>
 
                 </tr>
@@ -25,9 +28,9 @@
               <tbody>
                {% for repo in repo_list %}
                <tr>
-                 <td>{{ escape(repo['Name']) }}</td>
-                 <td>{{ repo['Status'] }}</td>
-                 <td>{{ repo['Actions'] }}</td>
+                 <td><a href="repo?repo={{ repo['index'] }}" title="{{ repo['path'] }}"><strong>{{ escape(repo['Name']) }}</strong> {%  raw repo['Status'] %}</a></td>
+                 <td>{% raw  repo['LastModified'] %}</td>
+                 <td>{% raw  repo['Actions'] %}</td>
 
                </tr>
 
