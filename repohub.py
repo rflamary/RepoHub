@@ -98,7 +98,7 @@ def get_stats(repo_list):
              ['Nb. repos.',len(repo_list)],
              ['Total modified',get_label('warning','Modified',nbmod)],
               ['Total Added',get_label('warning','Added',tadd)],
-              [ 'Total to update',get_label('warning','Modified',toup)] ]    
+              [ 'Total to update',get_label('warning','To update',toup)] ]    
 
 class MainHandler(tornado.web.RequestHandler): 
     

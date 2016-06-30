@@ -36,7 +36,7 @@ def get_status(s,path):
 #labelbadge_fmt="""<span class="btn btn-{t} btn-xs btn-block"><strong>{text}</strong> <span class="badge">{num}</span></span>"""
 
 label_fmt="""<span class="btn btn-{t} btn-xs"><strong>{text}</strong></span> """
-labelbadge_fmt="""<span class="btn btn-{t} btn-xs "><strong>{text}</strong> <span class="badge">{num}</span></span> """
+labelbadge_fmt="""<span class="btn btn-{t} btn-xs"><strong>{text}</strong> <span class="badge">{num}</span></span> """
 
 button_fmt="""<a href="{url}" class="btn btn-{t} btn-xs" role="button"><strong>{text}</strong></a> """
 button_icon_fmt="""<a href="{url}" class="btn btn-{t} btn-xs" role="button"><span class="glyphicon glyphicon-{icon}"></span> <strong>{text}</strong></a> """
