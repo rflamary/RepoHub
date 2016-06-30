@@ -9,10 +9,14 @@
 {%  if alert!='' %}
 
 <div class="alert alert-{{ atype }} alert-dismissible">
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>    
   {% raw alert %}
 </div>
 
 {% end %}
+    <h1 class="page-header">Dashboard</h1>
 
           <div class="table-responsive">
             <table class="table table-striped">
@@ -33,7 +37,6 @@
                  <td>{% raw  repo['Actions'] %}</td>
 
                </tr>
-
                {% end %}
 
 
@@ -41,7 +44,5 @@
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
-    </div>
+
 {% end %}

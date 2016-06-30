@@ -1,0 +1,90 @@
+
+
+{% extends "index.html" %}
+
+
+{% block title %}
+RepoHub \ {{ repo['Name']}}
+{% end %}
+
+
+            {% block sidebar %}
+            <li><a href="/">Overview <span class="sr-only">(current)</span></a></li>
+            <li><a href="#">Import Repo</a></li>
+            <li><a href="#">Export Repos</a></li>
+            {% end %}
+
+
+{% block content %}
+{%  if alert!='' %}
+
+<div class="alert alert-{{ atype }} alert-dismissible">
+  {% raw alert %}
+</div>
+
+{% end %}
+<h1 class="page-header">Repo: {{ repo['Name'] }}</h1>
+
+
+
+<div class="row">
+  <div class="col-md-6">
+      <h2> Informations  </h2>
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+
+                    <th>Property</th>
+                    <th>Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+
+                    {% for key in infos %}
+                    <tr>
+                      <td><strong>{{ key }}</strong></td>
+                      <td> {% raw infos[key] %}</td>
+
+                    </tr>
+
+                    {% end %}
+
+                </tbody>
+              </table>
+            </div>
+  </div>
+  <div class="col-md-6">
+<h2> Actions  </h2>
+{% raw  repo['repo'].get_actions_text_large(i) %}
+  </div>
+</div>
+
+<h2> Files  </h2>
+
+    <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+
+                    <th>Filename</th>
+                    <th>Local Status</th>
+                    <th>Distant Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+
+                    {% for file in repo['repo'].stat %}
+                    <tr>
+                      <td><strong>{{ file['fname'] }}</strong></td>
+                      <td>{{ file['status'] }}</td>
+                    <td>{{ file['status2'] }}</td>
+                    </tr>
+
+                    {% end %}
+
+                </tbody>
+              </table>
+            </div>
+
+{% end %}

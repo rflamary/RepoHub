@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -7,10 +7,10 @@
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
     <meta name="description" content="">
     <meta name="author" content="Rémi Flamary">
-    <link rel="icon" href="../../favicon.ico">
 
-    <title>RepoHub</title>
-
+    <link rel="icon" type="image/png" href="imgs/repository.png" />
+    <title>{% block title %}RepoHub{% end %}</title>
+    {% block head %}{% end %}
     <!-- Bootstrap core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
 
@@ -52,20 +52,26 @@
       <div class="row">
         <div class="col-sm-3 col-md-2 sidebar">
           <ul class="nav nav-sidebar">
-            <li class="active"><a href="#">Overview <span class="sr-only">(current)</span></a></li>
+            {% block sidebar %}
+            <li class="active"><a href="/">Overview <span class="sr-only">(current)</span></a></li>
             <li><a href="#">Import Repo</a></li>
             <li><a href="#">Export Repos</a></li>
+            {% end %}
           </ul>
 
         </div>
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-          <h1 class="page-header">Dashboard</h1>
+
 
 {% block content %}
 
 {{ content }}
 
 {% end %}
+
+        </div>
+    </div>
+</div>
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
