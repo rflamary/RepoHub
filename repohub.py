@@ -69,31 +69,36 @@ def get_repo(i,repo_list):
 def start():
     
     tornado.ioloop.IOLoop.current().start()
-    
+
+
+def get_label(t,text,n):
+    labelbadge_fmt="""<span class="btn btn-{t} btn-xs "><strong>{text}</strong> <span class="badge">{num}</span></span> """
+    if n:
+        txt=labelbadge_fmt.format(t=t,text=text,num=n)
+    else:
+        txt=labelbadge_fmt.format(t='success',text=text,num=n)      
+    return txt
     
 def get_stats(repo_list):
     lastmod=0
     nbmod=0
     toup=0
-    labelbadge_fmt="""<span class="btn btn-{t} btn-xs "><strong>{text}</strong> <span class="badge">{num}</span></span> """
+    tadd=0
+      
+        
     for repo in repo_list:
         lastmod=max(lastmod,repo['repo'].lastmodified)
         nbmod+=repo['repo'].stats['M']
         toup+=repo['repo'].stats['SM']>0 or repo['repo'].stats['SA']>0
+        tadd+=repo['repo'].stats['A']
         
-    if nbmod:
-        nbmod_txt=labelbadge_fmt.format(t='warning',text='Modified',num=nbmod)
-    else:
-        nbmod_txt=labelbadge_fmt.format(t='success',text='Modified',num=nbmod)
         
-    if toup:
-        toup_txt=labelbadge_fmt.format(t='danger',text='To update',num=toup)
-    else:
-        toup_txt=labelbadge_fmt.format(t='success',text='To update',num=toup)        
-        
+         
     return [['Last modified',time.ctime(lastmod)],
-             ['Total modified',nbmod_txt],
-              [ 'Total to update',toup_txt] ]    
+             ['Nb. repos.',len(repo_list)],
+             ['Total modified',get_label('warning','Modified',nbmod)],
+              ['Total Added',get_label('warning','Added',tadd)],
+              [ 'Total to update',get_label('warning','Modified',toup)] ]    
 
 class MainHandler(tornado.web.RequestHandler): 
     
