@@ -72,7 +72,28 @@ def start():
     
     
 def get_stats(repo_list):
-    return [['Test','test2'],]    
+    lastmod=0
+    nbmod=0
+    toup=0
+    labelbadge_fmt="""<span class="btn btn-{t} btn-xs "><strong>{text}</strong> <span class="badge">{num}</span></span> """
+    for repo in repo_list:
+        lastmod=max(lastmod,repo['repo'].lastmodified)
+        nbmod+=repo['repo'].stats['M']
+        toup+=repo['repo'].stats['SM']>0 or repo['repo'].stats['SA']>0
+        
+    if nbmod:
+        nbmod_txt=labelbadge_fmt.format(t='warning',text='Modified',num=nbmod)
+    else:
+        nbmod_txt=labelbadge_fmt.format(t='success',text='Modified',num=nbmod)
+        
+    if toup:
+        toup_txt=labelbadge_fmt.format(t='danger',text='To update',num=toup)
+    else:
+        toup_txt=labelbadge_fmt.format(t='success',text='To update',num=toup)        
+        
+    return [['Last modified',time.ctime(lastmod)],
+             ['Total modified',nbmod_txt],
+              [ 'Total to update',toup_txt] ]    
 
 class MainHandler(tornado.web.RequestHandler): 
     
