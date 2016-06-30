@@ -173,8 +173,9 @@ class ActionHandler(tornado.web.RequestHandler):
             self.glob['atype']='info'
             self.redirect('/')    
         if action=='open':
-            path=self.get_argument("value")
-            subprocess.Popen("xdg-open {}".format(path), shell=True)
+            index=int(self.get_argument("repo"))
+            repo=get_repo(index,self.repo_list)
+            subprocess.Popen("xdg-open {}".format(repo['path']), shell=True)
             self.glob['message']=''#'<strong>Info</strong>:  Repository folder "{}" opened.'.format(path)
             self.glob['atype']='info'
             self.redirect('/')
