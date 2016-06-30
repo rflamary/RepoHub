@@ -69,8 +69,8 @@ def get_status_text(stats):
 
 def get_actions_text(i,stats):
     #res=button_icon_fmt.format(url='open?path={}'.format(stats['path']),text='Open',t='info',icon='folder-open')
-    res=button_icon_fmt_post.format(action='open',i=i,text='Open',t='info',icon='folder-open',value=stats['path'])
-    res+=button_icon_fmt_actionpost.format(action='update',i=i,valie=i,text='Update',t='primary',icon='download',value=stats['path'])#button_icon_fmt.format(url='action?repo={}&action=update'.format(i),text='Update',t='primary',icon='download')
+    res=button_icon_fmt_actionpost.format(action='open',i=i,text='Open',t='info',icon='folder-open',value=i)
+    res+=button_icon_fmt_actionpost.format(action='update',i=i,value=i,text='Update',t='primary',icon='download')#button_icon_fmt.format(url='action?repo={}&action=update'.format(i),text='Update',t='primary',icon='download')
     if stats['M']>0 or stats['A']>0:
         res+=button_icon_fmt.format(url='action?repo={}&action=commit'.format(i),text='Commit',t='warning',icon='upload')
     return res#"""<div class="btn-toolbar">{}</div>""".format(res)
@@ -135,8 +135,8 @@ class repo():
         message+=out
         if err:
             message+='\nError\n'+err
-        
-        self.l.update(self.path)
+        self.status2()
+        #self.l.update(self.path)
         return message
         
         

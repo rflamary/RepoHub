@@ -49,17 +49,30 @@ def load_repo_list(cfg):
     return lst
 
 
-def update_status(repo_list):
+def update_status(repo_list,distant=0):
     for repo in repo_list:
-        repo['repo'].status()
+        if distant:
+            repo['repo'].status2()
+        else:
+            repo['repo'].status()
         repo['Status']=repo['repo'].get_status_text()
         repo['Actions']=repo['repo'].get_actions_text(repo['index'])
         repo['LastModified']=time.ctime(repo['repo'].lastmodified)
-    repo_list.sort(key=lambda k: k['LastModified'],reverse=True)
+        repo['lm']=repo['repo'].lastmodified
+    repo_list.sort(key=lambda k: k['lm'],reverse=True)
+
+
+def get_repo(i,repo_list):
+    res=[repo for repo in repo_list if repo['index']==i]
+    return res[0]
         
 def start():
     
     tornado.ioloop.IOLoop.current().start()
+    
+    
+def get_stats(repo_list):
+    return [['Test','test2'],]    
 
 class MainHandler(tornado.web.RequestHandler): 
     
@@ -70,7 +83,7 @@ class MainHandler(tornado.web.RequestHandler):
     
     def get(self):
         update_status(self.repo_list)
-        self.render("dashboard.html",content='welcome!',repo_list=self.repo_list,alert=self.glob['message'],atype=self.glob['atype'])
+        self.render("dashboard.html",content='welcome!',repo_list=self.repo_list,alert=self.glob['message'],atype=self.glob['atype'],stats=get_stats(self.repo_list))
         self.glob['message']=''
         self.glob['atype']='info'
 
@@ -84,31 +97,30 @@ class RepoHandler(tornado.web.RequestHandler):
     def get(self):
         update_status(self.repo_list)
         index=int(self.get_argument("repo"))
-        repo=self.repo_list[index]
+        repo=get_repo(index,self.repo_list)
         self.render("repo2.html",content='welcome!',repo=repo,alert=self.glob['message'],atype=self.glob['atype'],infos=repo['repo'].infoprint,i=index)
         self.glob['message']=''
         self.glob['atype']='info'
 
         
-class OpenHandler(tornado.web.RequestHandler): 
-    
-    def initialize(self, repo_list,glob):
-        self.glob=glob
-        self.repo_list = repo_list
-    
-    def get(self):
-        update_status(self.repo_list)
-        path=self.get_argument("path")
-        subprocess.Popen("xdg-open {}".format(path), shell=True)
-        self.render("dashboard.html",content='welcome!',repo_list=self.repo_list,alert='<strong>Info</strong>:  Repository folder "{}" opened.'.format(path),atype='info')
-        
-    def post(self):
-        update_status(self.repo_list)
-        path=self.get_argument("value")
-        subprocess.Popen("xdg-open {}".format(path), shell=True)
-        self.glob['message']='<strong>Info</strong>:  Repository folder "{}" opened.'.format(path)
-        self.glob['atype']='info'
-        self.redirect('/')
+#class OpenHandler(tornado.web.RequestHandler): 
+#    
+#    def initialize(self, repo_list,glob):
+#        self.glob=glob
+#        self.repo_list = repo_list
+#    
+#    def get(self):
+#        update_status(self.repo_list)
+#        path=self.get_argument("path")
+#        subprocess.Popen("xdg-open {}".format(path), shell=True)
+#        self.render("dashboard.html",content='welcome!',repo_list=self.repo_list,alert='<strong>Info</strong>:  Repository folder "{}" opened.'.format(path),atype='info')
+#        
+#    def post(self):
+#        path=self.get_argument("value")
+#        subprocess.Popen("xdg-open {}".format(path), shell=True)
+#        self.glob['message']=''#'<strong>Info</strong>:  Repository folder "{}" opened.'.format(path)
+#        self.glob['atype']='info'
+#        self.redirect('/')
         
 class ActionHandler(tornado.web.RequestHandler): 
     
@@ -126,12 +138,24 @@ class ActionHandler(tornado.web.RequestHandler):
         update_status(self.repo_list)
         action=self.get_argument("action")
         if action=='update':
-            index=int(self.get_argument("repo")  )
-            repo=self.repo_list[index]
+            index=int(self.get_argument("repo"))
+            repo=get_repo(index,self.repo_list)
             message=repo['repo'].update()
             #self.render("output.html",title='Update',alert='',output=message,repo=repo)
             self.glob['message']='Update Repo <strong>{} </strong>: \n <pre class="bg-warning">{}</pre>'.format(repo['Name'],message)
             self.glob['atype']='warning'
+            self.redirect('/')
+        if action=='status':
+            update_status(self.repo_list,1)
+            #self.render("output.html",title='Update',alert='',output=message,repo=repo)
+            self.glob['message']='<strong>Info: </strong> All distant repository checked'
+            self.glob['atype']='info'
+            self.redirect('/')    
+        if action=='open':
+            path=self.get_argument("value")
+            subprocess.Popen("xdg-open {}".format(path), shell=True)
+            self.glob['message']=''#'<strong>Info</strong>:  Repository folder "{}" opened.'.format(path)
+            self.glob['atype']='info'
             self.redirect('/')
 
         #self.redirect('/')
@@ -179,7 +203,7 @@ def make_app():
     
     return tornado.web.Application([
         (r"/", MainHandler,{'repo_list':repo_list,'glob':glob}),
-        (r"/open", OpenHandler,{'repo_list':repo_list,'glob':glob}),
+  #      (r"/open", OpenHandler,{'repo_list':repo_list,'glob':glob}),
         (r"/repo", RepoHandler,{'repo_list':repo_list,'glob':glob}),
         (r"/action", ActionHandler,{'repo_list':repo_list,'glob':glob}),
         (r"/css/(.*)",tornado.web.StaticFileHandler, {"path": "www/css"},),

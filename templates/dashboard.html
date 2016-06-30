@@ -2,6 +2,11 @@
 
 {% extends "index.html" %}
 
+{% block head %}
+<META HTTP-EQUIV="refresh" CONTENT="30">
+{% end %}
+
+
 {% block content %}
 
 
@@ -11,12 +16,63 @@
 <div class="alert alert-{{ atype }} alert-dismissible">
   <button type="button" class="close" data-dismiss="alert" aria-label="Close">
     <span aria-hidden="true">&times;</span>
-  </button>    
+  </button>
   {% raw alert %}
 </div>
 
 {% end %}
     <h1 class="page-header">Dashboard</h1>
+
+
+    <div class="row">
+      <div class="col-md-6">
+<div class="panel panel-success" >
+      <div class="panel-heading ">
+      <h3 class="panel-title">Statistics</h3>
+      </div>
+      <div class="panel-body">
+
+
+            <table class="table table-striped">
+
+              <tbody>
+               {% for statprint in stats %}
+               <tr>
+                   <td><strong>{{ statprint[0] }}</strong> </td>
+                   <td>{% raw  statprint[1] %}</td>
+
+               </tr>
+               {% end %}
+
+
+
+              </tbody>
+            </table>
+
+</div>
+      </div>
+      </div>
+      <div class="col-md-6">
+          <div class="panel panel-info" >
+      <div class="panel-heading ">
+      <h3 class="panel-title">Shortcuts</h3>
+      </div>
+      <div class="panel-body">
+      <p>
+      <form class="form-inline hidden" action="action" method="post" id="status2">
+      <input type="hidden" name="action" value="status" /><input type="hidden" name="value" value="status" /></form>
+      <button type="submit" class="btn btn-primary"  form="status2" value="Submit"><span class="glyphicon glyphicon-refresh"></span> <strong>Check distant</strong></button>
+      </p>
+
+
+
+      </div>
+
+
+      </div>
+    </div>
+
+</div>
 
           <div class="table-responsive">
             <table class="table table-striped">
