@@ -57,10 +57,13 @@ def update_status(repo_list,distant=0):
             repo['repo'].status()
         repo['Status']=repo['repo'].get_status_text()
         repo['Actions']=repo['repo'].get_actions_text(repo['index'])
-        repo['LastModified']=time.ctime(repo['repo'].lastmodified)
+        repo['LastModified']=str_time(repo['repo'].lastmodified)
         repo['lm']=repo['repo'].lastmodified
     repo_list.sort(key=lambda k: k['lm'],reverse=True)
 
+
+def str_time(t):
+    return time.strftime('%H:%M:%S %d/%m/%Y',time.localtime(t))
 
 def get_repo(i,repo_list):
     res=[repo for repo in repo_list if repo['index']==i]
@@ -94,7 +97,7 @@ def get_stats(repo_list):
         
         
          
-    return [['Last modified',time.ctime(lastmod)],
+    return [['Last modified',str_time(lastmod)],
              ['Nb. repos.',len(repo_list)],
              ['Total modified',get_label('warning','Modified',nbmod)],
               ['Total Added',get_label('warning','Added',tadd)],
