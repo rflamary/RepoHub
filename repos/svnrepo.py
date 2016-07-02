@@ -89,6 +89,7 @@ def svn_status(path,get_all=True,update=False):
         for entry in e[0].findall('entry'):
             temp=dict()
             temp['path']=entry.get('path')
+            temp['fname']=entry.get('path')
             wc=entry.find('wc-status')
             temp['status']=convert[wc.get('item')]
             temp['revision']=wc.get('revision')

@@ -131,25 +131,7 @@ class RepoHandler(tornado.web.RequestHandler):
         self.glob['message']=''
         self.glob['atype']='info'
 
-        
-#class OpenHandler(tornado.web.RequestHandler): 
-#    
-#    def initialize(self, repo_list,glob):
-#        self.glob=glob
-#        self.repo_list = repo_list
-#    
-#    def get(self):
-#        update_status(self.repo_list)
-#        path=self.get_argument("path")
-#        subprocess.Popen("xdg-open {}".format(path), shell=True)
-#        self.render("dashboard.html",content='welcome!',repo_list=self.repo_list,alert='<strong>Info</strong>:  Repository folder "{}" opened.'.format(path),atype='info')
-#        
-#    def post(self):
-#        path=self.get_argument("value")
-#        subprocess.Popen("xdg-open {}".format(path), shell=True)
-#        self.glob['message']=''#'<strong>Info</strong>:  Repository folder "{}" opened.'.format(path)
-#        self.glob['atype']='info'
-#        self.redirect('/')
+
         
 class ActionHandler(tornado.web.RequestHandler): 
     

@@ -4,7 +4,7 @@
 
 
 {% block title %}
-RepoHub \ {{ repo['Name']}}
+RepoHub / {{ repo['Name']}}
 {% end %}
 
 
@@ -78,7 +78,7 @@ RepoHub \ {{ repo['Name']}}
                     <tr>
                       <td><strong>{{ file['fname'] }}</strong></td>
                       <td>{{ file['status'] }}</td>
-                    <td>{{ file['status2'] }}</td>
+                    <td>{{ file['repos-status'] }}</td>
                     </tr>
 
                     {% end %}
