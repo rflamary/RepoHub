@@ -58,11 +58,11 @@ button_icon_fmt_actionpost="""<form class="form-inline hidden" action="action" m
 def get_status_text(stats):
     res=''
     if stats['M']>0 :
-        res+=labelbadge_fmt.format(t='warning',text='Modified',num=stats['M'])
+        res+=labelbadge_fmt.format(t='warning',text='Modified',num=stats['M']+stats['D'])
     if stats['A']>0:
         res+=labelbadge_fmt.format(t='warning',text='Added',num=stats['A'])
     if  stats['SM']>0 or stats['SA']>0 :
-        res+=labelbadge_fmt.format(t='danger',text='To update',num= stats['SM'] + stats['SA'])         
+        res+=labelbadge_fmt.format(t='danger',text='To update',num= stats['SM'] + stats['SA']+ stats['SD'])         
     if stats['C']>0:
         res+=labelbadge_fmt.format(t='danger',text='Conflict',num=stats['C'])        
     if res=='':
@@ -82,7 +82,7 @@ def svn_status(path,get_all=True,update=False):
     a=' -v' if get_all else ''
     up=' -u' if update else ''
 
-    sp = subprocess.Popen('cd {path}; svn status --xml {a}{upp}'.format(path=path,a=a,upp=up), shell=True,stdout=subprocess.PIPE)
+    sp = subprocess.Popen('cd {path}; svn status --xml {a}{upp}'.format(path=path,a=a,upp=up), shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = sp.communicate()
     if out:
         e=xml.etree.cElementTree.fromstring(out)
@@ -103,7 +103,7 @@ def svn_status(path,get_all=True,update=False):
     
 def svn_info(path):
     temp=dict()
-    sp = subprocess.Popen('cd {path}; svn info --xml'.format(path=path), shell=True,stdout=subprocess.PIPE)
+    sp = subprocess.Popen('cd {path}; svn info --xml'.format(path=path), shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = sp.communicate()
     if out:
         e=xml.etree.cElementTree.fromstring(out)
@@ -115,6 +115,22 @@ def svn_info(path):
     temp['revision']=int(e[0].get('revision'))
     del(temp['depth'],temp['repository'],temp['schedule'],temp['wc-info'],temp['commit'])
     return temp
+
+def svn_commit(path,message='',files=[]):
+    #flist=='"'
+    txtout=''
+    if files:
+        flist='"'+'" "'.join(files)+'"'
+        sp = subprocess.Popen('cd {path}; svn commit {flist} -m "{message}"'.format(path=path,message=message,flist=flist), shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = sp.communicate()
+        txtout+=out
+        if err:
+            txtout+='</br>\n<strong>Error</strong>:</br>\n'+err
+    else:
+        txtout+='No files to commit!'
+    #self.l.update(self.path)
+    return txtout
+
 
 class repo():
     
@@ -159,21 +175,22 @@ class repo():
         self.status()
         self.stat2=svn_status(self.path,True,True)
         self.lastmodified=os.path.getmtime(self.path)
-        return self.stat2        
+        return self.stat2   
+        
+    def get_commit_list(self):
+        return [ item for item in svn_status(self.path,False,False) if item['status'] in ['M','A','D']]
+        
+    def commit(self,message,files):
+        return svn_commit(self.path,message,files)
         
         
     def update(self):
-        global message
-        message='Local {path}\n'.format(path=self.path)
-#        def notify(event_dict):
-#            global message
-#            message+=pprint.pformat(event_dict)     
-#        self.l.callback_notify = notify
-        sp = subprocess.Popen('cd {path}; svn update'.format(path=self.path), shell=True,stdout=subprocess.PIPE)
+        message='Local path: {path}\n'.format(path=self.path)
+        sp = subprocess.Popen('cd {path}; svn update'.format(path=self.path), shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = sp.communicate()
         message+=out
         if err:
-            message+='\nError\n'+err
+            message+='</br>\n<strong>Error</strong>:</br>\n'+err
         self.status2()
         #self.l.update(self.path)
         return message

@@ -140,14 +140,24 @@ class ActionHandler(tornado.web.RequestHandler):
         self.repo_list = repo_list
     
     def get(self):
-        update_status(self.repo_list)
-        path=self.get_argument("path")
-        subprocess.Popen("xdg-open {}".format(path), shell=True)
-        self.render("dashboard.html",content='welcome!',repo_list=self.repo_list,alert='<strong>Info</strong>:  Repository folder "{}" opened.'.format(path),atype='info')
+        action=self.get_argument("action")
+        if action=='update':
+            self.redirect('/')  
+        elif action=='commit':
+            index=int(self.get_argument("repo"))
+            repo=get_repo(index,self.repo_list)
+            self.render("commit.html",content='welcome!',repo=repo,alert=self.glob['message'],atype=self.glob['atype'],infos=repo['repo'].infoprint,i=index)
+            self.glob['message']=''
+            self.glob['atype']='info'
+             
+        else:
+            self.glob['message']='<strong>Error: </strong> Unknown action '
+            self.glob['atype']='danger'
+            self.redirect('/')              
         
     def post(self):
         update_status(self.repo_list)
-        action=self.get_argument("action")
+        action=self.get_argument("action",'')
         if action=='update':
             index=int(self.get_argument("repo"))
             repo=get_repo(index,self.repo_list)
@@ -156,19 +166,31 @@ class ActionHandler(tornado.web.RequestHandler):
             self.glob['message']='Update Repo <strong>{} </strong>: \n <pre class="bg-warning">{}</pre>'.format(repo['Name'],message)
             self.glob['atype']='warning'
             self.redirect('/')
-        if action=='status':
+        elif action=='status':
             update_status(self.repo_list,1)
-            #self.render("output.html",title='Update',alert='',output=message,repo=repo)
             self.glob['message']='<strong>Info: </strong> All distant repository checked'
             self.glob['atype']='info'
-            self.redirect('/')    
-        if action=='open':
+            self.redirect('/')  
+        elif action=='commit':
+            index=int(self.get_argument("repo"))
+            repo=get_repo(index,self.repo_list)
+            textcommit=self.get_argument("commit-text")
+            lstfiles=[v[0] for k,v in self.request.arguments.iteritems() if 'file' in k]  
+            outtext=repo['repo'].commit(textcommit,lstfiles)
+            self.glob['message']='Commit<strong> {}</strong> :\n</br> Commit text:</br> {}</br>Output:<br>\n<pre class="bg-info">{}</pre>'.format(repo['Name'],textcommit,outtext)
+            self.glob['atype']='info'
+            self.redirect('/')              
+        elif action=='open':
             index=int(self.get_argument("repo"))
             repo=get_repo(index,self.repo_list)
             subprocess.Popen("xdg-open {}".format(repo['path']), shell=True)
             self.glob['message']=''#'<strong>Info</strong>:  Repository folder "{}" opened.'.format(path)
             self.glob['atype']='info'
             self.redirect('/')
+        else:
+            self.glob['message']='<strong>Error: </strong> Unknown action '
+            self.glob['atype']='danger'
+            self.redirect('/')           
 
         #self.redirect('/')
 

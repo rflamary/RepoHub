@@ -1,0 +1,63 @@
+
+
+{% extends "index.html" %}
+
+
+{% block title %}
+RepoHub / {{ repo['Name'] }} / Commit
+{% end %}
+
+
+            {% block sidebar %}
+            <li><a href="/">Overview <span class="sr-only">(current)</span></a></li>
+            <li><a href="#">Import Repo</a></li>
+            <li><a href="#">Export Repos</a></li>
+            {% end %}
+
+
+{% block content %}
+{%  if alert!='' %}
+
+<div class="alert alert-{{ atype }} alert-dismissible">
+  {% raw alert %}
+</div>
+
+{% end %}
+<h1 class="page-header">Commit: {{ repo['Name'] }}</h1>
+
+<form  action="action" method="post" id="commit">
+
+    <input type="hidden" name="action" value="commit" form='commit' />
+    <input type="hidden" name="repo" value="{{ i }}" form='commit' />
+<div class="form-group">
+  <label for="commit-text">Commit text:</label>
+  <textarea type="text" rows="6" class="form-control" name="commit-text" form='commit' ></textarea>
+</div>
+<p class="text-right">
+<button class="btn btn-primary" type="submit" form="commit" value="Commit"><span class="glyphicon glyphicon-upload"></span> <strong>Commit</strong></button><p>
+    <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+
+                    <th>Filename</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+
+                    {% for j,file in enumerate(repo['repo'].get_commit_list()) %}
+                    <tr>
+                      <td><label><input type="checkbox" name="file{{ j }}" value="{{ file['fname'] }}" checked="checked" form='commit' > {{ file['fname'] }}</label></td>
+                      <td>{{ file['status'] }}</td>
+                    </tr>
+
+                    {% end %}
+
+                </tbody>
+              </table>
+            </div>
+
+</form>
+
+{% end %}
