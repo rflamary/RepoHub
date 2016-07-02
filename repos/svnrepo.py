@@ -55,6 +55,8 @@ button_icon_fmt_actionpost="""<form class="form-inline hidden" action="action" m
 <button class="btn btn-{t} btn-xs" type="submit" form="{action}{i}" value="Submit"><span class="glyphicon glyphicon-{icon}"></span> <strong>{text}</strong></button> """
 
 
+
+
 def get_status_text(stats):
     res=''
     if stats['M']>0 :
@@ -101,6 +103,15 @@ def svn_status(path,get_all=True,update=False):
             files.append(temp)
     return files
     
+def svn_update(path):
+    message='Local path: {path}\n'.format(path=path)
+    sp = subprocess.Popen('cd {path}; svn update'.format(path=path), shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = sp.communicate()
+    message+=out
+    if err:
+        message+='\nError:\n'+err   
+    return message
+    
 def svn_info(path):
     temp=dict()
     sp = subprocess.Popen('cd {path}; svn info --xml'.format(path=path), shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -117,7 +128,6 @@ def svn_info(path):
     return temp
 
 def svn_commit(path,message='',files=[]):
-    #flist=='"'
     txtout=''
     if files:
         flist='"'+'" "'.join(files)+'"'
@@ -125,10 +135,9 @@ def svn_commit(path,message='',files=[]):
         out, err = sp.communicate()
         txtout+=out
         if err:
-            txtout+='</br>\n<strong>Error</strong>:</br>\n'+err
+            txtout+='\nError:\n'+err
     else:
         txtout+='No files to commit!'
-    #self.l.update(self.path)
     return txtout
 
 
@@ -165,14 +174,11 @@ class repo():
         return get_actions_text(i,self.get_stats()).replace('btn-xs','btn-lg')        
         
     def status(self):
-        #self.infos()
         self.stat=svn_status(self.path,True)
         self.lastmodified=os.path.getmtime(self.path)
-        return self.stat
-        
+        return self.stat     
         
     def status2(self):
-        self.status()
         self.stat2=svn_status(self.path,True,True)
         self.lastmodified=os.path.getmtime(self.path)
         return self.stat2   
@@ -185,22 +191,18 @@ class repo():
         
         
     def update(self):
-        message='Local path: {path}\n'.format(path=self.path)
-        sp = subprocess.Popen('cd {path}; svn update'.format(path=self.path), shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = sp.communicate()
-        message+=out
-        if err:
-            message+='</br>\n<strong>Error</strong>:</br>\n'+err
+        message=svn_update(self.path)
         self.status2()
-        #self.l.update(self.path)
         return message
         
         
     def infos(self):
         self.status()
         
+        #get all infos
         infos=svn_info(self.path)
         
+        # handle Info to print
         infoprint=dict()
         for key in infoprint_lst:
             infoprint[infoprint_lst[key]]=infos[key]

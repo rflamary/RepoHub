@@ -11,9 +11,14 @@ import codecs
 import repos
 import time
 import subprocess
+import os.path
 
 static_path='www/'
 template_path='templates'
+
+default_config="""
+
+"""
 
     
 def load_config(c_file='config.ini'):
@@ -221,17 +226,35 @@ def start_periodic_callbacks(repo_list):
     return lst
 
     
+def check_configfiles():
+    configpath=os.path.expanduser('~/.config/repohub/')
+    repopath=configpath+'repos.ini'
+    cfpath=configpath+'config.ini'
+    if not os.path.exists(configpath):
+        os.mkdir(configpath)
+        open(repopath, 'a').close()
+        f=open(cfpath, 'a')
+        f.write(default_config)
+        f.close()
+        
+    return repopath,cfpath
+
 
 def make_app():
     
     # load config and repos
-    cfg=load_config()
+    repopath,cfpath=check_configfiles()
+    cfg=load_config(cfpath)
+    cfgrepos=load_config(repopath)
     repo_list=load_repo_list(cfg)
     
     # global informations
     glob=dict()
     glob['message']=''
     glob['atype']='info'
+    glob['repos']=cfgrepos
+    glob['config']=cfg
+    
     
     glob['periodic_callbacks']=start_periodic_callbacks(repo_list)
     
