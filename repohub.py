@@ -154,7 +154,10 @@ class ActionHandler(tornado.web.RequestHandler):
             self.render("commit.html",content='welcome!',repo=repo,alert=self.glob['message'],atype=self.glob['atype'],infos=repo['repo'].infoprint,i=index)
             self.glob['message']=''
             self.glob['atype']='info'
-             
+        elif action=='new':
+            self.render("new.html")
+            self.glob['message']=''
+            self.glob['atype']='info'             
         else:
             self.glob['message']='<strong>Error: </strong> Unknown action '
             self.glob['atype']='danger'
@@ -174,6 +177,14 @@ class ActionHandler(tornado.web.RequestHandler):
         elif action=='status':
             update_status(self.repo_list,1)
             self.glob['message']='<strong>Info: </strong> All distant repository checked'
+            self.glob['atype']='info'
+            self.redirect('/')  
+        elif action=='new':
+            message='<strong>Info: </strong>'
+            message+='<pre>New Repo\n'
+            message+='name:'+self.get_argument("name")
+            message+='\npath:'+self.get_argument("path")
+            self.glob['message']=message
             self.glob['atype']='info'
             self.redirect('/')  
         elif action=='commit':
@@ -246,7 +257,8 @@ def make_app():
     repopath,cfpath=check_configfiles()
     cfg=load_config(cfpath)
     cfgrepos=load_config(repopath)
-    repo_list=load_repo_list(cfg)
+    repo_list=load_repo_list(cfgrepos)
+    
     
     # global informations
     glob=dict()
