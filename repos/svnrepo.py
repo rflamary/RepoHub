@@ -63,7 +63,7 @@ def get_status_text(stats):
         res+=labelbadge_fmt.format(t='warning',text='Modified',num=stats['M']+stats['D'])
     if stats['A']>0:
         res+=labelbadge_fmt.format(t='warning',text='Added',num=stats['A'])
-    if  stats['SM']>0 or stats['SA']>0 :
+    if  stats['SM']>0 or stats['SA']>0 or stats['SD']>0 :
         res+=labelbadge_fmt.format(t='danger',text='To update',num= stats['SM'] + stats['SA']+ stats['SD'])         
     if stats['C']>0:
         res+=labelbadge_fmt.format(t='danger',text='Conflict',num=stats['C'])        
@@ -71,9 +71,13 @@ def get_status_text(stats):
         res=label_fmt.format(t='success',text='OK')
     return res
 
-def get_actions_text(i,stats):
+def get_actions_text(i,stats,cfg):
     #res=button_icon_fmt.format(url='open?path={}'.format(stats['path']),text='Open',t='info',icon='folder-open')
-    res=button_icon_fmt_actionpost.format(action='open',i=i,text='Open',t='info',icon='folder-open',value=i)
+    res=''
+    if 'open' in cfg['Commands']['cmd_list']:
+        res+=button_icon_fmt_actionpost.format(action='open',i=i,text='Open',t='info',icon='folder-open',value=i)
+    if 'terminal' in cfg['Commands']['cmd_list']:
+        res+=button_icon_fmt_actionpost.format(action='term',i=i,text='Terminal',t='info',icon='console',value=i)        
     res+=button_icon_fmt_actionpost.format(action='update',i=i,value=i,text='Update',t='primary',icon='download')#button_icon_fmt.format(url='action?repo={}&action=update'.format(i),text='Update',t='primary',icon='download')
     if stats['M']>0 or stats['A']>0:
         res+=button_icon_fmt.format(url='action?repo={}&action=commit'.format(i),text='Commit',t='warning',icon='upload')
@@ -84,7 +88,7 @@ def svn_status(path,get_all=True,update=False):
     a=' -v' if get_all else ''
     up=' -u' if update else ''
 
-    sp = subprocess.Popen('cd {path}; svn status --xml {a}{upp}'.format(path=path,a=a,upp=up), shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    sp = subprocess.Popen('svn status --xml --non-interactive {a}{upp}'.format(path=path,a=a,upp=up),cwd=path, shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = sp.communicate()
     if out:
         e=xml.etree.cElementTree.fromstring(out)
@@ -105,7 +109,7 @@ def svn_status(path,get_all=True,update=False):
     
 def svn_update(path):
     message='Local path: {path}\n'.format(path=path)
-    sp = subprocess.Popen('cd {path}; svn update'.format(path=path), shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    sp = subprocess.Popen('svn update --non-interactive'.format(path=path),cwd=path, shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = sp.communicate()
     message+=out.decode('utf-8')
     if err:
@@ -114,7 +118,7 @@ def svn_update(path):
     
 def svn_info(path):
     temp=dict()
-    sp = subprocess.Popen('cd {path}; svn info --xml'.format(path=path), shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    sp = subprocess.Popen('svn info --xml'.format(path=path),cwd=path, shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = sp.communicate()
     if out:
         e=xml.etree.cElementTree.fromstring(out)
@@ -131,7 +135,7 @@ def svn_commit(path,message='',files=[]):
     txtout=''
     if files:
         flist='"'+'" "'.join(files)+'"'
-        sp = subprocess.Popen('cd {path}; svn commit {flist} -m "{message}"'.format(path=path,message=message,flist=flist), shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        sp = subprocess.Popen('svn commit --non-interactive {flist} -m "{message}"'.format(path=path,message=message,flist=flist),cwd=path, shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = sp.communicate()
         txtout+=out.decode('utf-8')
         if err:
@@ -143,8 +147,9 @@ def svn_commit(path,message='',files=[]):
 
 class repo():
     
-    def __init__(self,path):
+    def __init__(self,path,cfg=[]):
         self.path=path
+        self.cfg=cfg
         self.lastmodified=os.path.getmtime(path)
         self.stat2=[]
         self.infos()
@@ -168,10 +173,10 @@ class repo():
         return get_status_text(self.get_stats())
 
     def get_actions_text(self,i=0):
-        return get_actions_text(i,self.get_stats())
+        return get_actions_text(i,self.get_stats(),self.cfg)
         
     def get_actions_text_large(self,i=0):
-        return get_actions_text(i,self.get_stats()).replace('btn-xs','btn-lg')        
+        return get_actions_text(i,self.get_stats(),self.cfg).replace('btn-xs','btn-lg')        
         
     def status(self):
         self.stat=svn_status(self.path,True)

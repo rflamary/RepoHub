@@ -36,24 +36,24 @@ def load_config(c_file='config.ini'):
         config=None         
     return config,cfg
 
-def load_repo(i,key,cfgt):
+def load_repo(i,key,cfgt,cfgtot):
     temp=dict()
     temp['Name']=key
     temp['config']=cfgt
     temp['index']=i
     temp['type']=cfgt['type']
     temp['path']=cfgt['path']
-    temp['repo']=repos.repo[cfgt['type']](cfgt['path'])
+    temp['repo']=repos.repo[cfgt['type']](cfgt['path'],cfgtot)
     temp['Status']=temp['repo'].get_status_text()
     temp['Actions']=temp['repo'].get_actions_text(i)
     temp['LastModified']=time.ctime(temp['repo'].lastmodified)    
     return temp
     
-def load_repo_list(cfg):
+def load_repo_list(cfg,cfgtot):
     lst=[]
     for i,key in enumerate(cfg):
         cftemp=cfg[key]
-        temp=load_repo(i,key,cftemp)
+        temp=load_repo(i,key,cftemp,cfgtot)
         lst.append(temp)
     
     return lst
@@ -119,6 +119,10 @@ class MainHandler(tornado.web.RequestHandler):
         
         self.glob = glob
         self.repo_list = repo_list
+        
+    def alert(self,message='',atype='atype'):
+        self.glob['message']=message
+        self.glob['atype']=atype       
     
     def get(self):
         update_status(self.repo_list)
@@ -146,7 +150,7 @@ def save_config(path,configobj):
     configobj.write(f)
     f.close()
         
-class ActionHandler(tornado.web.RequestHandler): 
+class ActionHandler(MainHandler): 
     
     def initialize(self, repo_list,glob):
         self.glob=glob
@@ -188,8 +192,7 @@ class ActionHandler(tornado.web.RequestHandler):
             self.glob['atype']='info'
             self.redirect('/')  
         elif action=='new':
-            message='<strong>Info: </strong></br><pre>'
-            
+            message='<strong>Info: </strong></br><pre>'           
             name=self.get_argument("name")
             path=self.get_argument("path")
             tp=self.get_argument("type")
@@ -203,20 +206,13 @@ class ActionHandler(tornado.web.RequestHandler):
                 repos[name]['actions']=actions
                 repos[name]['periods']=periods
                 save_config(self.glob['reposcfg'].filename,self.glob['reposcfg'])
-                #self.glob['reposcfg'].write(self.glob['reposcfg'].filename)
-                self.repo_list.append(load_repo(len(self.repo_list),name,repos[name]))
+                self.repo_list.append(load_repo(len(self.repo_list),name,repos[name],self.glob['config']))
+                start_periodic_callbacks(self.repo_list[-1:])
+                message+='Repo {} added succeslully'.format(name)
             elif name:
                 message+='Error: Repo name exists'
             else:
                 message+='Error: Repo name empty'
-                    
-            message+='</pre>'
-#            message+='<pre>New Repo\n'
-#            message+='name:'+self.get_argument("name")
-#            message+='\npath:'+self.get_argument("path")
-#            message+='\ntype:'+self.get_argument("type")
-#            message+='\nactions:'+self.get_argument("actions")
-#            message+='\nperiuods:'+self.get_argument("periods")
             self.glob['message']=message
             self.glob['atype']='info'
             self.redirect('/')  
@@ -226,13 +222,20 @@ class ActionHandler(tornado.web.RequestHandler):
             textcommit=self.get_argument("commit-text")
             lstfiles=[v[0].decode('utf-8') for k,v in self.request.arguments.items() if 'file' in k]  
             outtext=repo['repo'].commit(textcommit,lstfiles)
-            self.glob['message']='Commit<strong> {}</strong> :\n</br> Commit text:</br> {}</br>Output:<br>\n<pre class="bg-info">{}</pre>'.format(repo['Name'],textcommit,outtext)
+            self.glob['message']='Commit for <strong> {}</strong> :\n</br><pre class="bg-info"> Commit text:\n {}\nOutput:\n{}</pre>'.format(repo['Name'],textcommit,outtext)
             self.glob['atype']='info'
             self.redirect('/')              
         elif action=='open':
             index=int(self.get_argument("repo"))
             repo=get_repo(index,self.repo_list)
             subprocess.Popen("xdg-open {}".format(repo['path']), shell=True)
+            self.glob['message']=''#'<strong>Info</strong>:  Repository folder "{}" opened.'.format(path)
+            self.glob['atype']='info'
+            self.redirect('/')
+        elif action=='term':
+            index=int(self.get_argument("repo"))
+            repo=get_repo(index,self.repo_list)
+            subprocess.Popen(self.glob['config']['Commands']['terminal-cmd'].format(path=repo['path']), shell=True)
             self.glob['message']=''#'<strong>Info</strong>:  Repository folder "{}" opened.'.format(path)
             self.glob['atype']='info'
             self.redirect('/')
@@ -290,7 +293,7 @@ def make_app():
     repopath,cfpath=check_configfiles()
     cfg=load_config(cfpath)
     cfgrepos=load_config(repopath)
-    repo_list=load_repo_list(cfgrepos[0])
+    repo_list=load_repo_list(cfgrepos[0],cfg[0])
     
     
     # global informations
