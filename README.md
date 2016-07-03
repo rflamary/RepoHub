@@ -16,4 +16,6 @@ sudo apt-get install python3-tornado
 
 ## Config
 
-RepoHub uses local confug file located at ~/.config/repohub. The files ```config.ini``` and 
+RepoHub uses local confug file located at ~/.config/repohub.
+
+The files ```config.ini``` and ```repos.ini``` contain respectively the global parameters of the app and the repository list.
