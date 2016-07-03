@@ -18,6 +18,13 @@ static_path='www/'
 template_path='templates'
 
 default_config="""
+[Commands]
+cmd_list=open,terminal
+open-cmd=xdg-open {path}
+terminal-cmd=xfce4-terminal --default-working-directory="{path}"
+
+[Visualization]
+repo_show_files=A,M, ,D,
 
 """
 
@@ -141,7 +148,7 @@ class RepoHandler(tornado.web.RequestHandler):
         update_status(self.repo_list)
         index=int(self.get_argument("repo"))
         repo=get_repo(index,self.repo_list)
-        self.render("repo2.html",content='welcome!',repo=repo,alert=self.glob['message'],atype=self.glob['atype'],infos=repo['repo'].infoprint,i=index)
+        self.render("repo2.html",content='welcome!',repo=repo,alert=self.glob['message'],atype=self.glob['atype'],infos=repo['repo'].infoprint,glob=self.glob,i=index)
         self.glob['message']=''
         self.glob['atype']='info'
 
@@ -228,7 +235,7 @@ class ActionHandler(MainHandler):
         elif action=='open':
             index=int(self.get_argument("repo"))
             repo=get_repo(index,self.repo_list)
-            subprocess.Popen("xdg-open {}".format(repo['path']), shell=True)
+            subprocess.Popen(self.glob['config']['Commands']['open-cmd'].format(path=repo['path']), shell=True)
             self.glob['message']=''#'<strong>Info</strong>:  Repository folder "{}" opened.'.format(path)
             self.glob['atype']='info'
             self.redirect('/')
