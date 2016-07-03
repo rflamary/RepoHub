@@ -27,7 +27,7 @@ terminal-cmd=xfce4-terminal --default-working-directory="{path}"
 repo-show-files=A,M, ,D,
 
 [Server]
-listen=8888
+listen-port=8888
 """
 
     
@@ -333,6 +333,6 @@ def make_app():
        
 def start():
     app,config = make_app()
-    app.listen(int(config['Server']['listen']))
-    print('RepoHub starting at address : http://localhost:{}'.format(config['Server']['listen']))
+    app.listen(int(config['Server']['listen-port']))
+    print('RepoHub starting at address : http://localhost:{}'.format(config['Server']['listen-port']))
     tornado.ioloop.IOLoop.current().start()
