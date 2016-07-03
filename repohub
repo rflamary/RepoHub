@@ -48,6 +48,5 @@ import repohub
 #    print name,' :\t',args.__dict__[name]
 
 if __name__ == "__main__":
-    app = repohub.make_app()
-    app.listen(8888)
+
     repohub.start()

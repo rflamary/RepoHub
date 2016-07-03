@@ -46,7 +46,15 @@ RepoHub / New Repo
         </div>
       </div>
       {% end %}
-
+      <h3> Server </h3>
+      {% for key in config['Server'] %}
+      <div class="form-group row">
+         <label for="Commands/{{ key }}" class="col-sm-2 form-control-label">{{ key }}</label>
+         <div class="col-sm-10">
+           <input type="text" class="form-control" name="Server/{{ key }}" value="{{ config['Server'][key] }}" >
+         </div>
+       </div>
+       {% end %}
 <input type="hidden" name="action" value="setting" form='settings' />
 
 <p class="text-right">

@@ -19,13 +19,15 @@ template_path='templates'
 
 default_config="""
 [Commands]
-cmd_list=open,terminal
+cmd-list=open,terminal
 open-cmd=xdg-open {path}
 terminal-cmd=xfce4-terminal --default-working-directory="{path}"
 
 [Visualization]
-repo_show_files=A,M, ,D,
+repo-show-files=A,M, ,D,
 
+[Server]
+listen=8888
 """
 
     
@@ -85,10 +87,7 @@ def str_time(t):
 def get_repo(i,repo_list):
     res=[repo for repo in repo_list if repo['index']==i]
     return res[0]
-        
-def start():
-    
-    tornado.ioloop.IOLoop.current().start()
+ 
 
 
 def get_label(t,text,n):
@@ -276,7 +275,7 @@ def start_periodic_callbacks(repo_list):
     lst=[]   
     for repo in repo_list:
         for action,delta in zip(repo['config']['actions'].split(','),[int(t)*1000 for t in repo['config']['periods'].split(',')]):
-            print(u"Repo: {}, Action: {}, Period: {}s".format(repo['Name'],action,delta/1000))
+            #print(u"Repo: {}, Action: {}, Period: {}s".format(repo['Name'],action,delta/1000))
             #f= lambda x=1: (callback_repo(repo,action),myprint(repo['Name'],action) )
             lst.append(tornado.ioloop.PeriodicCallback(lambda repo=repo,action=action:myfunc(repo,action),delta))
             lst[-1].start()
@@ -329,8 +328,11 @@ def make_app():
         (r"/imgs/(.*)",tornado.web.StaticFileHandler, {"path": "www/imgs"},),
         (r"/js/(.*)",tornado.web.StaticFileHandler, {"path": "www/js"},),
         (r"/fonts/(.*)",tornado.web.StaticFileHandler, {"path": "www/fonts"},),
-    ],template_path=template_path)
+    ],template_path=template_path),cfg[0]
 
-
-
-cfg=load_config()
+       
+def start():
+    app,config = make_app()
+    app.listen(int(config['Server']['listen']))
+    print('RepoHub starting at address : http://localhost:{}'.format(config['Server']['listen']))
+    tornado.ioloop.IOLoop.current().start()
