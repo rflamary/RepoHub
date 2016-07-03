@@ -6,7 +6,8 @@ import tornado.web
 import tornado.template
 import tornado
 import tornado.httpserver
-import ConfigParser
+#import ConfigParser
+import configparser
 import codecs
 import repos
 import time
@@ -26,29 +27,33 @@ def load_config(c_file='config.ini'):
     Safe config file loading function
     """
     try:
-        config = ConfigParser.ConfigParser()
-        config.optionxform = str
+        config = configparser.ConfigParser()
         config.readfp(codecs.open(c_file, "r+", "utf8"))
+        cfg=config
         config=config._sections
         #print config
     except IOError:
         config=None         
-    return config  
+    return config,cfg
+
+def load_repo(i,key,cfgt):
+    temp=dict()
+    temp['Name']=key
+    temp['config']=cfgt
+    temp['index']=i
+    temp['type']=cfgt['type']
+    temp['path']=cfgt['path']
+    temp['repo']=repos.repo[cfgt['type']](cfgt['path'])
+    temp['Status']=temp['repo'].get_status_text()
+    temp['Actions']=temp['repo'].get_actions_text(i)
+    temp['LastModified']=time.ctime(temp['repo'].lastmodified)    
+    return temp
     
 def load_repo_list(cfg):
     lst=[]
     for i,key in enumerate(cfg):
         cftemp=cfg[key]
-        temp=dict()
-        temp['Name']=key
-        temp['config']=cftemp
-        temp['index']=i
-        temp['type']=cftemp['type']
-        temp['path']=cftemp['path']
-        temp['repo']=repos.repo[cftemp['type']](cftemp['path'])
-        temp['Status']=temp['repo'].get_status_text()
-        temp['Actions']=temp['repo'].get_actions_text(i)
-        temp['LastModified']=time.ctime(temp['repo'].lastmodified)
+        temp=load_repo(i,key,cftemp)
         lst.append(temp)
     
     return lst
@@ -136,7 +141,10 @@ class RepoHandler(tornado.web.RequestHandler):
         self.glob['message']=''
         self.glob['atype']='info'
 
-
+def save_config(path,configobj):
+    f=codecs.open(path, "w+", "utf8")
+    configobj.write(f)
+    f.close()
         
 class ActionHandler(tornado.web.RequestHandler): 
     
@@ -171,7 +179,7 @@ class ActionHandler(tornado.web.RequestHandler):
             repo=get_repo(index,self.repo_list)
             message=repo['repo'].update()
             #self.render("output.html",title='Update',alert='',output=message,repo=repo)
-            self.glob['message']='Update Repo <strong>{} </strong>: \n <pre class="bg-warning">{}</pre>'.format(repo['Name'],message)
+            self.glob['message']=u'Update Repo <strong>{} </strong>: \n <pre class="bg-warning">{}</pre>'.format(repo['Name'],message)
             self.glob['atype']='warning'
             self.redirect('/')
         elif action=='status':
@@ -180,10 +188,35 @@ class ActionHandler(tornado.web.RequestHandler):
             self.glob['atype']='info'
             self.redirect('/')  
         elif action=='new':
-            message='<strong>Info: </strong>'
-            message+='<pre>New Repo\n'
-            message+='name:'+self.get_argument("name")
-            message+='\npath:'+self.get_argument("path")
+            message='<strong>Info: </strong></br><pre>'
+            
+            name=self.get_argument("name")
+            path=self.get_argument("path")
+            tp=self.get_argument("type")
+            actions=self.get_argument("actions")
+            periods=self.get_argument("periods")
+            if name and not name in self.glob['repos']:
+                repos=self.glob['repos']
+                repos[name]={}
+                repos[name]['path']=path
+                repos[name]['type']=tp
+                repos[name]['actions']=actions
+                repos[name]['periods']=periods
+                save_config(self.glob['reposcfg'].filename,self.glob['reposcfg'])
+                #self.glob['reposcfg'].write(self.glob['reposcfg'].filename)
+                self.repo_list.append(load_repo(len(self.repo_list),name,repos[name]))
+            elif name:
+                message+='Error: Repo name exists'
+            else:
+                message+='Error: Repo name empty'
+                    
+            message+='</pre>'
+#            message+='<pre>New Repo\n'
+#            message+='name:'+self.get_argument("name")
+#            message+='\npath:'+self.get_argument("path")
+#            message+='\ntype:'+self.get_argument("type")
+#            message+='\nactions:'+self.get_argument("actions")
+#            message+='\nperiuods:'+self.get_argument("periods")
             self.glob['message']=message
             self.glob['atype']='info'
             self.redirect('/')  
@@ -191,7 +224,7 @@ class ActionHandler(tornado.web.RequestHandler):
             index=int(self.get_argument("repo"))
             repo=get_repo(index,self.repo_list)
             textcommit=self.get_argument("commit-text")
-            lstfiles=[v[0] for k,v in self.request.arguments.iteritems() if 'file' in k]  
+            lstfiles=[v[0].decode('utf-8') for k,v in self.request.arguments.items() if 'file' in k]  
             outtext=repo['repo'].commit(textcommit,lstfiles)
             self.glob['message']='Commit<strong> {}</strong> :\n</br> Commit text:</br> {}</br>Output:<br>\n<pre class="bg-info">{}</pre>'.format(repo['Name'],textcommit,outtext)
             self.glob['atype']='info'
@@ -229,7 +262,7 @@ def start_periodic_callbacks(repo_list):
     lst=[]   
     for repo in repo_list:
         for action,delta in zip(repo['config']['actions'].split(','),[int(t)*1000 for t in repo['config']['periods'].split(',')]):
-            print("Repo: {}, Action: {}, Period: {}s".format(repo['Name'],action,delta/1000))
+            print(u"Repo: {}, Action: {}, Period: {}s".format(repo['Name'],action,delta/1000))
             #f= lambda x=1: (callback_repo(repo,action),myprint(repo['Name'],action) )
             lst.append(tornado.ioloop.PeriodicCallback(lambda repo=repo,action=action:myfunc(repo,action),delta))
             lst[-1].start()
@@ -257,15 +290,18 @@ def make_app():
     repopath,cfpath=check_configfiles()
     cfg=load_config(cfpath)
     cfgrepos=load_config(repopath)
-    repo_list=load_repo_list(cfgrepos)
+    repo_list=load_repo_list(cfgrepos[0])
     
     
     # global informations
     glob=dict()
     glob['message']=''
     glob['atype']='info'
-    glob['repos']=cfgrepos
-    glob['config']=cfg
+    glob['repos']=cfgrepos[0]
+    glob['config']=cfg[0]
+    glob['reposcfg']=cfgrepos[1]
+    glob['reposcfg'].filename=repopath
+    glob['configcfg']=cfg[1]    
     
     
     glob['periodic_callbacks']=start_periodic_callbacks(repo_list)

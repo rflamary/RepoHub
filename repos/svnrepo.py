@@ -107,9 +107,9 @@ def svn_update(path):
     message='Local path: {path}\n'.format(path=path)
     sp = subprocess.Popen('cd {path}; svn update'.format(path=path), shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = sp.communicate()
-    message+=out
+    message+=out.decode('utf-8')
     if err:
-        message+='\nError:\n'+err   
+        message+='\nError:\n'+err.decode('utf-8')
     return message
     
 def svn_info(path):
@@ -133,9 +133,9 @@ def svn_commit(path,message='',files=[]):
         flist='"'+'" "'.join(files)+'"'
         sp = subprocess.Popen('cd {path}; svn commit {flist} -m "{message}"'.format(path=path,message=message,flist=flist), shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = sp.communicate()
-        txtout+=out
+        txtout+=out.decode('utf-8')
         if err:
-            txtout+='\nError:\n'+err
+            txtout+='\nError:\n'+err.decode('utf-8')
     else:
         txtout+='No files to commit!'
     return txtout

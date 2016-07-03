@@ -7,6 +7,21 @@
 {% end %}
 
 
+{% block sidebar %}
+               <div class="divider-vertical"></div>
+            <ul class="nav nav-sidebar">
+              <li class="active"><a href="/"> <span class="glyphicon glyphicon-stats"> Dashboard <span class="sr-only">(current)</span></a></li>
+            </ul>
+            <div class="divider-vertical"></div>
+         <ul class="nav nav-sidebar">
+           <li><a href="action?action=new"><span class="glyphicon glyphicon-plus"> New Repo</a></li>
+           <li><a href="#"><span class="glyphicon glyphicon-cog"> Settings</a></li>
+           <li><a href="#"><span class="glyphicon glyphicon-question-sign"> Help</a></li>
+         </ul>
+
+ {% end %}
+
+
 {% block content %}
 
 

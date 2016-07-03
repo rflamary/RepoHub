@@ -69,13 +69,14 @@ RepoHub / {{ repo['Name']}}
                 </thead>
                 <tbody>
 
-                    {% for file in repo['repo'].stat %}
+                    {% for file in repo['repo'].stat  %}
+                    {% if file['status'] in ['A','M','D'] %}
                     <tr>
                       <td><strong>{{ file['fname'] }}</strong></td>
                       <td>{{ file['status'] }}</td>
                     <td>{{ file['repos-status'] }}</td>
                     </tr>
-
+                    {% end %}
                     {% end %}
 
                 </tbody>

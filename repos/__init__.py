@@ -1,7 +1,7 @@
 
 
-import svnrepo
+import repos.svnrepo
 
 
-repo=   {u'svn':svnrepo.repo}
+repo=   {u'svn':repos.svnrepo.repo}
 
