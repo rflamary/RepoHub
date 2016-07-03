@@ -74,9 +74,9 @@ def get_status_text(stats):
 def get_actions_text(i,stats,cfg):
     #res=button_icon_fmt.format(url='open?path={}'.format(stats['path']),text='Open',t='info',icon='folder-open')
     res=''
-    if 'open' in cfg['Commands']['cmd_list']:
+    if 'open' in cfg['Commands']['cmd-list']:
         res+=button_icon_fmt_actionpost.format(action='open',i=i,text='Open',t='info',icon='folder-open',value=i)
-    if 'terminal' in cfg['Commands']['cmd_list']:
+    if 'terminal' in cfg['Commands']['cmd-list']:
         res+=button_icon_fmt_actionpost.format(action='term',i=i,text='Terminal',t='info',icon='console',value=i)        
     res+=button_icon_fmt_actionpost.format(action='update',i=i,value=i,text='Update',t='primary',icon='download')#button_icon_fmt.format(url='action?repo={}&action=update'.format(i),text='Update',t='primary',icon='download')
     if stats['M']>0 or stats['A']>0:
@@ -105,6 +105,8 @@ def svn_status(path,get_all=True,update=False):
             else:
                 temp['repos-status']=''    
             files.append(temp)
+    else:
+        print('Warning: {}\n Error:\n{}'.format(path,err))
     return files
     
 def svn_update(path):

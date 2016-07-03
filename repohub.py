@@ -176,7 +176,11 @@ class ActionHandler(MainHandler):
         elif action=='new':
             self.render("new.html")
             self.glob['message']=''
-            self.glob['atype']='info'             
+            self.glob['atype']='info'  
+        elif action=='settings':
+            self.render("settings.html",config=self.glob['config'])
+            self.glob['message']=''
+            self.glob['atype']='info'               
         else:
             self.glob['message']='<strong>Error: </strong> Unknown action '
             self.glob['atype']='danger'

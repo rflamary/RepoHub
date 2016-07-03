@@ -70,7 +70,7 @@ RepoHub / {{ repo['Name']}}
                 <tbody>
 
                     {% for file in repo['repo'].stat  %}
-                    {% if file['status'] in glob['config']['Visualization']['repo_show_files'] %}
+                    {% if file['status'] in glob['config']['Visualization']['repo-show-files'] %}
                     <tr>
                       <td><strong>{{ file['fname'] }}</strong></td>
                       <td>{{ file['status'] }}</td>
