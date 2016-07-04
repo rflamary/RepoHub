@@ -103,13 +103,15 @@ def get_stats(repo_list):
     nbmod=0
     toup=0
     tadd=0
+    tconf=0
       
         
     for repo in repo_list:
         lastmod=max(lastmod,repo['repo'].lastmodified)
         nbmod+=repo['repo'].stats['M']
-        toup+=repo['repo'].stats['SM']>0 or repo['repo'].stats['SA']>0
+        toup+=repo['repo'].stats['SM']+ repo['repo'].stats['SA']
         tadd+=repo['repo'].stats['A']
+        tconf+=repo['repo'].stats['C']
         
         
          
@@ -117,6 +119,7 @@ def get_stats(repo_list):
              ['Nb. repos.',len(repo_list)],
              ['Total modified',get_label('warning','Modified',nbmod)],
               ['Total Added',get_label('warning','Added',tadd)],
+              [ 'Total Conflicts',get_label('danger','Conflicts',tconf)],               
               [ 'Total to update',get_label('danger','To update',toup)] ]    
 
 class MainHandler(tornado.web.RequestHandler): 

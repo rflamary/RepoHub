@@ -63,6 +63,8 @@ def get_status_text(stats):
         res+=labelbadge_fmt.format(t='warning',text='Modified',num=stats['M']+stats['D'])
     if stats['A']>0:
         res+=labelbadge_fmt.format(t='warning',text='Added',num=stats['A'])
+    if stats['C']>0:
+        res+=labelbadge_fmt.format(t='danger',text='Conflicts',num=stats['C'])        
     if  stats['SM']>0 or stats['SA']>0 or stats['SD']>0 :
         res+=labelbadge_fmt.format(t='danger',text='To update',num= stats['SM'] + stats['SA']+ stats['SD'])         
     if stats['C']>0:
