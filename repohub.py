@@ -205,7 +205,7 @@ class ActionHandler(MainHandler):
             self.glob['atype']='info'
             self.redirect('/')  
         elif action=='new':
-            message='<strong>Info: </strong></br><pre>'           
+            message='<strong>Info: </strong></br><pre class="bg-info">'           
             name=self.get_argument("name")
             path=self.get_argument("path")
             tp=self.get_argument("type")
