@@ -1,15 +1,29 @@
 # RepoHub
-Automatic monitoring of local repositories (svn,git)
+Automatic monitoring of local repositories (svn,git).
 
+
+![Screenshot](www/imgs/repohub.png?raw=true "Dashborad screenshot")
+
+## Features
+
+- [x] Web interface.
+- [x] Local SVN monitoring.
+- [ ] Local GIT monitoring.
+- [x] Visual labels for Modified/Added/Updated files in repositories.
+- [x] Periodic update of distant repositories.
+- [x] Update/Commit from the web interface.
+- [ ] Edit settings/repositories from web interface.
 
 ## Install
 
-The software requires the following python libraries and software (for Python 3):
+The software requires the following software and python libraries  (for Python 3):
 
 * tornado (python 3)
 * subversion (svn command line)
+* git
 
-under ubuntu you need only install the following: 
+
+under ubuntu you need only install the following:
 ```
 sudo apt-get install python3-tornado
 ```
