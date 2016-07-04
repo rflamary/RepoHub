@@ -3,7 +3,7 @@
 import os
 import subprocess
 import xml.etree.cElementTree
-
+import time
 
 convert={'unversioned':'?',
          'ignored':'I',
@@ -132,6 +132,7 @@ def svn_info(path):
                 temp[child2.tag]=child2.text
     temp['localrevision']=int(e[0].find('commit').get('revision'))
     temp['revision']=int(e[0].get('revision'))
+    temp['last-change']=time.mktime(time.strptime(temp['date'][:-8],'%Y-%m-%dT%H:%M:%S'))
     del(temp['depth'],temp['repository'],temp['schedule'],temp['wc-info'],temp['commit'])
     return temp
 
@@ -155,8 +156,12 @@ class repo():
         self.path=path
         self.cfg=cfg
         self.lastmodified=os.path.getmtime(path)
+        
         self.stat2=[]
+        self.stat=[]
+        self.status()
         self.infos()
+        
         
     def get_stats(self):
         stats={}
@@ -184,12 +189,10 @@ class repo():
         
     def status(self):
         self.stat=svn_status(self.path,True)
-        self.lastmodified=os.path.getmtime(self.path)
         return self.stat     
         
     def status2(self):
         self.stat2=svn_status(self.path,True,True)
-        self.lastmodified=os.path.getmtime(self.path)
         return self.stat2   
         
     def get_commit_list(self):
@@ -204,9 +207,11 @@ class repo():
         self.status2()
         return message
         
+    def get_last_modif(self):
+        self.lastmodified=max(os.path.getmtime(self.path),self.info['last-change'])
+        
         
     def infos(self):
-        self.status()
         
         #get all infos
         infos=svn_info(self.path)
@@ -218,6 +223,7 @@ class repo():
         infoprint['Local path']=self.path
         infoprint['Labels']=self.get_status_text()
 
+        self.lastmodified=max(os.path.getmtime(self.path),infos['last-change'])
         self.info=infos
         self.infoprint=infoprint
         return self.info
@@ -226,8 +232,6 @@ class repo():
         
         
 
-path='/home/rflamary/Documents/Papers/PAMI2015/'
-#
 #test=repo(path)
 
 #st=test.infos()
