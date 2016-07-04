@@ -28,6 +28,8 @@ under ubuntu you need only install the following:
 sudo apt-get install python3-tornado
 ```
 
+To run the RepoHub server just execute the file ```./repohub``` in the root folder.
+
 ## Config
 
 RepoHub uses local confug file located at ~/.config/repohub.
