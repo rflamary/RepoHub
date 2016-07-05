@@ -14,8 +14,8 @@ import time
 import subprocess
 import os.path
 
-static_path='www/'
-template_path='templates'
+static_path=os.path.dirname(os.path.realpath(__file__))+'/www/'
+template_path=os.path.dirname(os.path.realpath(__file__))+'/templates'
 
 default_config="""
 [Commands]
@@ -307,8 +307,7 @@ def make_app():
     cfg=load_config(cfpath)
     cfgrepos=load_config(repopath)
     repo_list=load_repo_list(cfgrepos[0],cfg[0])
-    
-    
+
     # global informations
     glob=dict()
     glob['message']=''
@@ -327,10 +326,10 @@ def make_app():
   #      (r"/open", OpenHandler,{'repo_list':repo_list,'glob':glob}),
         (r"/repo", RepoHandler,{'repo_list':repo_list,'glob':glob}),
         (r"/action", ActionHandler,{'repo_list':repo_list,'glob':glob}),
-        (r"/css/(.*)",tornado.web.StaticFileHandler, {"path": "www/css"},),
-        (r"/imgs/(.*)",tornado.web.StaticFileHandler, {"path": "www/imgs"},),
-        (r"/js/(.*)",tornado.web.StaticFileHandler, {"path": "www/js"},),
-        (r"/fonts/(.*)",tornado.web.StaticFileHandler, {"path": "www/fonts"},),
+        (r"/css/(.*)",tornado.web.StaticFileHandler, {"path": static_path+"css"},),
+        (r"/imgs/(.*)",tornado.web.StaticFileHandler, {"path": static_path+"imgs"},),
+        (r"/js/(.*)",tornado.web.StaticFileHandler, {"path": static_path+"js"},),
+        (r"/fonts/(.*)",tornado.web.StaticFileHandler, {"path": static_path+"fonts"},),
     ],template_path=template_path),cfg[0]
 
        

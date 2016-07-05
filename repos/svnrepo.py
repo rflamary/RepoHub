@@ -93,20 +93,23 @@ def svn_status(path,get_all=True,update=False):
     sp = subprocess.Popen('svn status --xml --non-interactive {a}{upp}'.format(path=path,a=a,upp=up),cwd=path, shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = sp.communicate()
     if out:
-        e=xml.etree.cElementTree.fromstring(out)
-        for entry in e[0].findall('entry'):
-            temp=dict()
-            temp['path']=entry.get('path')
-            temp['fname']=entry.get('path')
-            wc=entry.find('wc-status')
-            temp['status']=convert[wc.get('item')]
-            temp['revision']=wc.get('revision')
-            cm=entry.find('repos-status')
-            if not cm is None:
-                temp['repos-status']=convert[cm.get('item')]
-            else:
-                temp['repos-status']=''    
-            files.append(temp)
+        try:
+            e=xml.etree.cElementTree.fromstring(out)
+            for entry in e[0].findall('entry'):
+                temp=dict()
+                temp['path']=entry.get('path')
+                temp['fname']=entry.get('path')
+                wc=entry.find('wc-status')
+                temp['status']=convert[wc.get('item')]
+                temp['revision']=wc.get('revision')
+                cm=entry.find('repos-status')
+                if not cm is None:
+                    temp['repos-status']=convert[cm.get('item')]
+                else:
+                    temp['repos-status']=''    
+                files.append(temp)
+        except xml.etree.ElementTree.ParseError:
+            print('Warning: update for {} failed\nOut:\n {}\nError:{}'.format(path,out,err))
     else:
         print('Warning: {}\n Error:\n{}'.format(path,err))
     return files
