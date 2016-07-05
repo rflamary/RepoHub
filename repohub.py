@@ -270,7 +270,10 @@ def callback_repo(repo,action):
         repo['Status']=repo['repo'].get_status_text()
         repo['Actions']=repo['repo'].get_actions_text(repo['index'])
         repo['LastModified']=time.ctime(repo['repo'].lastmodified)
-
+    if action=='infos':
+        repo['repo'].infos()
+        repo['LastModified']=time.ctime(repo['repo'].lastmodified)
+        
 def start_periodic_callbacks(repo_list):
     def myfunc(repo,action):
         #print("Callback for Repo: {}, Action: {}".format(repo['Name'],action))
