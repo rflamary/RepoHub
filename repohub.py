@@ -64,7 +64,6 @@ def load_repo_list(cfg,cfgtot):
         cftemp=cfg[key]
         temp=load_repo(i,key,cftemp,cfgtot)
         lst.append(temp)
-    
     return lst
 
 
