@@ -20,8 +20,9 @@ convert={'unversioned':'?',
 
 
 
-infoprint_lst={'root':'Distant repos.',
-           'revision':'Revision',
+infoprint_lst={'path':'Local path',
+           'revision':'Last Commit',
+           'author':'Author',
            'url':'URL'}
 
     
@@ -54,11 +55,11 @@ def get_status_text(stats):
     if stats['M']>0 :
         res+=labelbadge_fmt.format(t='warning',text='Modified',num=stats['M']+stats['D'])
     if stats['A']>0:
-        res+=labelbadge_fmt.format(t='warning',text='Added',num=stats['A'])
-    if stats['C']>0:
-        res+=labelbadge_fmt.format(t='danger',text='Conflicts',num=stats['C'])        
-    if  stats['SM']>0 or stats['SA']>0 or stats['SD']>0 :
-        res+=labelbadge_fmt.format(t='danger',text='To update',num= stats['SM'] + stats['SA']+ stats['SD'])         
+        res+=labelbadge_fmt.format(t='warning',text='Added',num=stats['A'])     
+    if  stats['adelta']>0  :
+        res+=labelbadge_fmt.format(t='warning',text='To push',num=stats['adelta'])    
+    if  stats['bdelta']>0  :
+        res+=labelbadge_fmt.format(t='danger',text='To pull',num=stats['bdelta'])         
     if stats['C']>0:
         res+=labelbadge_fmt.format(t='danger',text='Conflict',num=stats['C'])        
     if res=='':
@@ -75,9 +76,12 @@ def get_actions_text(i,stats,cfg):
         res+=button_icon_fmt_actionpost.format(action='open',i=i,text='Open',t='info',icon='folder-open',value=i)
     if 'terminal' in cfg['Commands']['cmd-list']:
         res+=button_icon_fmt_actionpost.format(action='term',i=i,text='Terminal',t='info',icon='console',value=i)        
-    res+=button_icon_fmt_actionpost.format(action='update',i=i,value=i,text='Update',t='primary',icon='download')#button_icon_fmt.format(url='action?repo={}&action=update'.format(i),text='Update',t='primary',icon='download')
-    if stats['M']>0 or stats['A']>0:
-        res+=button_icon_fmt.format(url='action?repo={}&action=commit'.format(i),text='Commit',t='warning',icon='upload')
+    tpull= 'primary' if stats['bdelta']==0 else 'danger'
+    res+=button_icon_fmt_actionpost.format(action='pull',i=i,value=i,text='Pull',t=tpull,icon='download')#button_icon_fmt.format(url='action?repo={}&action=update'.format(i),text='Update',t='primary',icon='download')
+    if stats['M']>0 or stats['A']>0 or stats['D']>0:
+        res+=button_icon_fmt.format(url='action?repo={}&action=commit'.format(i),text='Commit',t='warning',icon='play-circle')
+    if stats['adelta']>0:
+        res+=button_icon_fmt_actionpost.format(action='push',i=i,value=i,text='Push',t='warning',icon='upload')        
     return res#"""<div class="btn-toolbar">{}</div>""".format(res)
 
 def git_status(rep):
@@ -121,16 +125,15 @@ def git_commit_delta(rep,remote=False):
     remote_branch=rep.git.config('--get','branch.{branch}.remote'.format(branch=branch))
     adelta=int(rep.git.rev_list('--count','{remote_branch}..HEAD'.format(remote_branch=remote_branch)))
     bdelta=int(rep.git.rev_list('--count','HEAD..{remote_branch}'.format(remote_branch=remote_branch)))
-    return adelta,bdelta
+    return [adelta,bdelta]
 
 def git_commit(rep,message='',files=[]):
     index = rep.index
     index.add(files)
-    res=''
     try:
         res=rep.git.commit('-v','-m',message)
     except git.GitCommandError as err:
-        res+='\nError: '+err.__str__()
+        res='Error: '+err.__str__()
     
     
     return res
@@ -173,11 +176,10 @@ class repo():
         self.cfg=cfg
         self.lastmodified=os.path.getmtime(path)
         self.repo=git.Repo(path)
-        self.stat2=[]
         self.stat=[]
-        #self.status()
-        #self.infos()
-        
+        self.delta=[0,0]
+        self.status()
+        self.infos()
         
     def get_stats(self):
         stats={}
@@ -186,12 +188,19 @@ class repo():
             stats['S'+ convert[key]]=0
         #print stats
         for entry in self.stat:
+            if not entry['status'] in stats:
+                stats[entry['status']]=1
             stats[entry['status']]+=1
-        for entry in self.stat2:
+        for entry in self.stat:
+            if not'S'+ entry['status2'] in stats:
+                stats['S'+entry['status2']]=1
             stats['S'+entry['status2']]+=1            
         stats['path']=self.path
+        
+        stats['adelta']=self.delta[0]
+        stats['bdelta']=self.delta[1]
+        
         self.stats=stats
-
         return stats
         
     def get_status_text(self):
@@ -204,22 +213,33 @@ class repo():
         return get_actions_text(i,self.get_stats(),self.cfg).replace('btn-xs','btn-lg')        
         
     def status(self):
-        self.stat=svn_status(self.path,True)
+        self.delta[0],temp=git_commit_delta(self.repo)
+        self.stat=git_status(self.repo)
+        self.lastmodified=max(os.path.getmtime(self.path),self.repo.commit().authored_date)
+        self.get_stats()
         return self.stat     
         
     def status2(self):
-        self.stat2=svn_status(self.path,True,True)
-        return self.stat2   
+        self.delta=git_commit_delta(self.repo,True)
+        self.stat=git_status(self.repo)
+        self.lastmodified=max(os.path.getmtime(self.path),self.repo.commit().authored_date)
+        self.get_stats()
+        return self.stat  
         
     def get_commit_list(self):
-        return [ item for item in svn_status(self.path,False,False) if item['status'] in ['M','A','D']]
+        return [ item for item in self.status() if item['status'] in ['M','A','D']]
         
     def commit(self,message,files):
-        return svn_commit(self.path,message,files)
+        return git_commit(self.repo,message,files)
         
         
-    def update(self):
-        message=svn_update(self.path)
+    def pull(self):
+        message=git_pull(self.repo)
+        self.status2()
+        return message
+
+    def push(self):
+        message=git_push(self.repo)
         self.status2()
         return message
         
@@ -230,16 +250,21 @@ class repo():
     def infos(self):
         
         #get all infos
-        infos=svn_info(self.path)
+        infos={}
+        
+        infos['path']=self.path
+        infos['author']=self.repo.commit().author.name
+        infos['revision']=self.repo.commit().hexsha
+        infos['url']=self.repo.git.config('--get','remote.origin.url')
         
         # handle Info to print
         infoprint=dict()
         for key in infoprint_lst:
             infoprint[infoprint_lst[key]]=infos[key]
-        infoprint['Local path']=self.path
+
         infoprint['Labels']=self.get_status_text()
 
-        self.lastmodified=max(os.path.getmtime(self.path),infos['last-change'])
+        self.lastmodified=max(os.path.getmtime(self.path),self.repo.commit().authored_date)
         self.info=infos
         self.infoprint=infoprint
         return self.info
@@ -248,10 +273,10 @@ class repo():
         
         
 
-path="/home/rflamary/PYTHON/RepoHub/"
+#path="/home/rflamary/PYTHON/RepoHub/"
 #rep=git.cmd.Git(path)
-rep=git.Repo(path)
-status=rep.git.status('--porcelain')
+#repo=repo(path)
+#status=rep.git.status('--porcelain')
 #rp=repo(path)
 
 #st=test.infos()

@@ -19,8 +19,7 @@ convert={'unversioned':'?',
 
 
 
-infoprint_lst={'root':'Distant repos.',
-           'revision':'Revision',
+infoprint_lst={'revision':'Revision',
            'localrevision':'Local revision',
            'author':'Author',
            'url':'URL'}
