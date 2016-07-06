@@ -22,17 +22,8 @@ convert={'unversioned':'?',
 
 infoprint_lst={'root':'Distant repos.',
            'revision':'Revision',
-           'localrevision':'Local revision',
-           'author':'Author',
            'url':'URL'}
 
-def get_status(s,path):
-    res={}
-    res['path']=s.path
-    res['fname']=s.path.replace(path,'')
-    res['status']=convert[str(s.text_status)]
-    res['status2']=convert[str(s.repos_text_status)]
-    return res
     
 
 #label_fmt="""<span class="btn btn-{t} btn-xs btn-block"><strong>{text}</strong></span>"""
@@ -75,16 +66,7 @@ def get_status_text(stats):
     return res
     
 
-def git_get_branch(rep):
-    txt=rep.git.symbolic_ref('-q','HEAD')
-    return txt.split('/')[-1]
-    
-def git_commit_delta(rep):
-    branch=git_get_branch(rep)
-    remote_branch=rep.git.config('--get','branch.{branch}.remote'.format(branch=branch))
-    adelta=int(rep.git.rev_list('--count','{remote_branch}..HEAD'.format(remote_branch=remote_branch)))
-    bdelta=int(rep.git.rev_list('--count','HEAD..{remote_branch}'.format(remote_branch=remote_branch)))
-    return adelta,bdelta
+
 
 def get_actions_text(i,stats,cfg):
     #res=button_icon_fmt.format(url='open?path={}'.format(stats['path']),text='Open',t='info',icon='folder-open')
@@ -98,43 +80,61 @@ def get_actions_text(i,stats,cfg):
         res+=button_icon_fmt.format(url='action?repo={}&action=commit'.format(i),text='Commit',t='warning',icon='upload')
     return res#"""<div class="btn-toolbar">{}</div>""".format(res)
 
-def svn_status(path,get_all=True,update=False):
+def git_status(rep):
     files=list()
-    a=' -v' if get_all else ''
-    up=' -u' if update else ''
-
-    sp = subprocess.Popen('svn status --xml --non-interactive {a}{upp}'.format(path=path,a=a,upp=up),cwd=path, shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = sp.communicate()
-    if out:
-        try:
-            e=xml.etree.cElementTree.fromstring(out)
-            for entry in e[0].findall('entry'):
-                temp=dict()
-                temp['path']=entry.get('path')
-                temp['fname']=entry.get('path')
-                wc=entry.find('wc-status')
-                temp['status']=convert[wc.get('item')]
-                temp['revision']=wc.get('revision')
-                cm=entry.find('repos-status')
-                if not cm is None:
-                    temp['repos-status']=convert[cm.get('item')]
-                else:
-                    temp['repos-status']=''    
-                files.append(temp)
-        except xml.etree.ElementTree.ParseError:
-            print('Warning: update for {} failed\nOut:\n {}\nError:{}'.format(path,out,err))
-    else:
-        print('Warning: {}\n Error:\n{}'.format(path,err))
-    return files
     
-def svn_update(path):
-    message='Local path: {path}\n'.format(path=path)
-    sp = subprocess.Popen('svn update --non-interactive'.format(path=path),cwd=path, shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = sp.communicate()
-    message+=out.decode('utf-8')
-    if err:
-        message+='\nError:\n'+err.decode('utf-8')
+    
+    stat=rep.git.status('--porcelain')
+  
+
+    for entry in stat.split('\n'):
+        temp=dict()
+        path=entry[3:]
+        if len(path.split(' -> '))>1:
+            path=path.split(' -> ')[-1]
+        
+        temp['path']=path
+        temp['fname']=path
+        temp['status']=entry[1]
+        temp['status2']=entry[0]
+        files.append(temp)
+    
+    return files
+
+def git_pull(rep):
+    message=rep.git.pull('--no-edit','-v','--stat')
     return message
+    
+def git_push(rep):
+    message=rep.git.push('-v')
+    return message
+
+
+def git_get_branch(rep):
+    txt=rep.git.symbolic_ref('-q','HEAD')
+    return txt.split('/')[-1]
+    
+def git_commit_delta(rep,remote=False):
+    branch=git_get_branch(rep)
+    if remote:
+        rep.git.remote('update')
+    remote_branch=rep.git.config('--get','branch.{branch}.remote'.format(branch=branch))
+    adelta=int(rep.git.rev_list('--count','{remote_branch}..HEAD'.format(remote_branch=remote_branch)))
+    bdelta=int(rep.git.rev_list('--count','HEAD..{remote_branch}'.format(remote_branch=remote_branch)))
+    return adelta,bdelta
+
+def git_commit(rep,message='',files=[]):
+    index = rep.index
+    index.add(files)
+    res=''
+    try:
+        res=rep.git.commit('-m',message)
+    except git.GitCommandError as err:
+        res+='\nError: '+err.__str__()
+    
+    
+    return res
+
     
 def svn_info(path):
     temp=dict()
@@ -188,7 +188,7 @@ class repo():
         for entry in self.stat:
             stats[entry['status']]+=1
         for entry in self.stat2:
-            stats['S'+entry['repos-status']]+=1            
+            stats['S'+entry['status2']]+=1            
         stats['path']=self.path
         self.stats=stats
 
