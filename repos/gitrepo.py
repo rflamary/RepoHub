@@ -73,6 +73,18 @@ def get_status_text(stats):
     if res=='':
         res=label_fmt.format(t='success',text='OK')
     return res
+    
+
+def git_get_branch(rep):
+    txt=rep.git.symbolic_ref('-q','HEAD')
+    return txt.split('/')[-1]
+    
+def git_commit_delta(rep):
+    branch=git_get_branch(rep)
+    remote_branch=rep.git.config('--get','branch.{branch}.merge'.format(branch=branch))
+    delta=int(rep.git.rev_list('--count','{remote_branch}..HEAD'.format(remote_branch=remote_branch)))
+    delta-=int(rep.git.rev_list('--count','HEAD..{remote_branch}'.format(remote_branch=remote_branch)))
+    return delta
 
 def get_actions_text(i,stats,cfg):
     #res=button_icon_fmt.format(url='open?path={}'.format(stats['path']),text='Open',t='info',icon='folder-open')
