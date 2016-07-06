@@ -236,7 +236,7 @@ class ActionHandler(MainHandler):
                 save_config(self.glob['reposcfg'].filename,self.glob['reposcfg'])
                 self.repo_list.append(load_repo(len(self.repo_list),name,repos[name],self.glob['config']))
                 start_periodic_callbacks(self.repo_list[-1:])
-                message+='Repo {} added succeslully'.format(name)
+                message+='Repo {} added succesfully'.format(name)
             elif name:
                 message+='Error: Repo name exists'
             else:

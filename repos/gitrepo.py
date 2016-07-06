@@ -124,8 +124,13 @@ def git_commit_delta(rep,remote=False):
     if remote:
         rep.git.remote('update')
     remote_branch=rep.git.config('--get','branch.{branch}.remote'.format(branch=branch))
-    adelta=int(rep.git.rev_list('--count','{remote_branch}..HEAD'.format(remote_branch=remote_branch)))
-    bdelta=int(rep.git.rev_list('--count','HEAD..{remote_branch}'.format(remote_branch=remote_branch)))
+    try:
+        adelta=int(rep.git.rev_list('--count','{remote_branch}..HEAD'.format(remote_branch=remote_branch)))
+        bdelta=int(rep.git.rev_list('--count','HEAD..{remote_branch}'.format(remote_branch=remote_branch)))
+    except git.GitCommandError:
+        adelta=0
+        bdelta=0
+        print('Warning: unable to get delta with remote')
     return [adelta,bdelta]
 
 def git_commit(rep,message='',files=[]):
@@ -135,39 +140,8 @@ def git_commit(rep,message='',files=[]):
         res=rep.git.commit('-v','-m',message)
     except git.GitCommandError as err:
         res='Error: '+err.__str__()
-    
-    
     return res
 
-    
-def svn_info(path):
-    temp=dict()
-    sp = subprocess.Popen('svn info --xml'.format(path=path),cwd=path, shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = sp.communicate()
-    if out:
-        e=xml.etree.cElementTree.fromstring(out)
-        for child in e[0]:
-            temp[child.tag]=child.text
-            for child2 in child:
-                temp[child2.tag]=child2.text
-    temp['localrevision']=int(e[0].find('commit').get('revision'))
-    temp['revision']=int(e[0].get('revision'))
-    temp['last-change']=time.mktime(time.strptime(temp['date'][:-8],'%Y-%m-%dT%H:%M:%S'))
-    del(temp['depth'],temp['repository'],temp['schedule'],temp['wc-info'],temp['commit'])
-    return temp
-
-def svn_commit(path,message='',files=[]):
-    txtout=''
-    if files:
-        flist='"'+'" "'.join(files)+'"'
-        sp = subprocess.Popen('svn commit --non-interactive {flist} -m "{message}"'.format(path=path,message=message,flist=flist),cwd=path, shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = sp.communicate()
-        txtout+=out.decode('utf-8')
-        if err:
-            txtout+='\nError:\n'+err.decode('utf-8')
-    else:
-        txtout+='No files to commit!'
-    return txtout
 
 
 class repo():
