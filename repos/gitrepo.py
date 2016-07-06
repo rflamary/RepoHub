@@ -101,6 +101,7 @@ def git_status(rep):
             temp['fname']=path
             temp['status']=entry[1]
             temp['status2']=entry[0]
+            temp['repos-status']=entry[0]
             files.append(temp)
     
     return files

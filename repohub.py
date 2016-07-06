@@ -52,7 +52,7 @@ def load_repo(i,key,cfgt,cfgtot):
     temp['index']=i
     temp['type']=cfgt['type']
     temp['path']=cfgt['path']
-    temp['repo']=repos.repo[cfgt['type']](cfgt['path'],cfgtot)
+    temp['repo']=repos.lst[cfgt['type']](cfgt['path'],cfgtot)
     temp['Status']=temp['repo'].get_status_text()
     temp['Actions']=temp['repo'].get_actions_text(i)
     temp['LastModified']=time.ctime(temp['repo'].lastmodified)    
@@ -198,6 +198,22 @@ class ActionHandler(MainHandler):
             self.glob['message']=u'Update Repo <strong>{} </strong>: \n <pre class="bg-warning">{}</pre>'.format(repo['Name'],message)
             self.glob['atype']='warning'
             self.redirect('/')
+        elif action=='pull':
+            index=int(self.get_argument("repo"))
+            repo=get_repo(index,self.repo_list)
+            message=repo['repo'].pull()
+            #self.render("output.html",title='Update',alert='',output=message,repo=repo)
+            self.glob['message']=u'Pull Repo <strong>{} </strong>: \n <pre class="bg-warning">{}</pre>'.format(repo['Name'],message)
+            self.glob['atype']='warning'
+            self.redirect('/')   
+        elif action=='push':
+            index=int(self.get_argument("repo"))
+            repo=get_repo(index,self.repo_list)
+            message=repo['repo'].push()
+            #self.render("output.html",title='Update',alert='',output=message,repo=repo)
+            self.glob['message']=u'Push Repo <strong>{} </strong>: \n <pre class="bg-warning">{}</pre>'.format(repo['Name'],message)
+            self.glob['atype']='warning'
+            self.redirect('/')              
         elif action=='status':
             update_status(self.repo_list,1)
             self.glob['message']='<strong>Info: </strong> All distant repository checked'
