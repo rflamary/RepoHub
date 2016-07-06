@@ -128,7 +128,7 @@ def git_commit(rep,message='',files=[]):
     index.add(files)
     res=''
     try:
-        res=rep.git.commit('-m',message)
+        res=rep.git.commit('-v','-m',message)
     except git.GitCommandError as err:
         res+='\nError: '+err.__str__()
     
