@@ -90,18 +90,18 @@ def git_status(rep):
     
     stat=rep.git.status('--porcelain')
   
-
-    for entry in stat.split('\n'):
-        temp=dict()
-        path=entry[3:]
-        if len(path.split(' -> '))>1:
-            path=path.split(' -> ')[-1]
-        
-        temp['path']=path
-        temp['fname']=path
-        temp['status']=entry[1]
-        temp['status2']=entry[0]
-        files.append(temp)
+    if stat:
+        for entry in stat.split('\n'):
+            temp=dict()
+            path=entry[3:]
+            if len(path.split(' -> '))>1:
+                path=path.split(' -> ')[-1]
+            
+            temp['path']=path
+            temp['fname']=path
+            temp['status']=entry[1]
+            temp['status2']=entry[0]
+            files.append(temp)
     
     return files
 
