@@ -8,7 +8,7 @@ Automatic monitoring of local repositories (svn,git).
 
 - [x] Web interface.
 - [x] Local SVN monitoring.
-- [ ] Local GIT monitoring.
+- [x] Local GIT monitoring.
 - [x] Visual labels for Modified/Added/Updated files in repositories.
 - [x] Periodic update of distant repositories.
 - [x] Update/Commit from the web interface.
