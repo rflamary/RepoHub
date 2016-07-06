@@ -20,7 +20,7 @@ The software requires the following software and python libraries  (for Python 3
 
 * tornado (python 3)
 * subversion (svn command line)
-* git
+* git, GitPython
 
 
 under ubuntu you need only install the following:
