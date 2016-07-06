@@ -81,10 +81,10 @@ def git_get_branch(rep):
     
 def git_commit_delta(rep):
     branch=git_get_branch(rep)
-    remote_branch=rep.git.config('--get','branch.{branch}.merge'.format(branch=branch))
-    delta=int(rep.git.rev_list('--count','{remote_branch}..HEAD'.format(remote_branch=remote_branch)))
-    delta-=int(rep.git.rev_list('--count','HEAD..{remote_branch}'.format(remote_branch=remote_branch)))
-    return delta
+    remote_branch=rep.git.config('--get','branch.{branch}.remote'.format(branch=branch))
+    adelta=int(rep.git.rev_list('--count','{remote_branch}..HEAD'.format(remote_branch=remote_branch)))
+    bdelta=int(rep.git.rev_list('--count','HEAD..{remote_branch}'.format(remote_branch=remote_branch)))
+    return adelta,bdelta
 
 def get_actions_text(i,stats,cfg):
     #res=button_icon_fmt.format(url='open?path={}'.format(stats['path']),text='Open',t='info',icon='folder-open')
