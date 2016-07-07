@@ -13,7 +13,8 @@ Automatic monitoring of local repositories (svn,git).
 - [x] Periodic update of distant repositories.
 - [x] Update/Commit from the web interface.
 - [ ] Edit settings/repositories from web interface.
-
+- [ ] Add files button.
+- 
 ## Install
 
 The software requires the following software and python libraries  (for Python 3):
