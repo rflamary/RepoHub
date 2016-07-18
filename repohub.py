@@ -110,10 +110,6 @@ def get_stats(repo_list):
         lastmod=max(lastmod,repo['repo'].lastmodified)
         nbmod+=repo['repo'].stats['M']
         toup+=repo['repo'].stats['SM']+ repo['repo'].stats['SA']
-        if repo['repo'].stats['SM']+ repo['repo'].stats['SA']>0:
-            print(repo)
-            print(repo['repo'].stats)
-
         tadd+=repo['repo'].stats['A']
         tconf+=repo['repo'].stats['C']
         if repo['type']=='git':
