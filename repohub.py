@@ -30,7 +30,7 @@ repo-show-files=A,M, ,D,
 listen-port=8888
 """
 
-    
+
 def load_config(c_file='config.ini'):
     """
     Safe config file loading function
@@ -42,7 +42,7 @@ def load_config(c_file='config.ini'):
         config=config._sections
         #print config
     except IOError:
-        config=None         
+        config=None
     return config,cfg
 
 def load_repo(i,key,cfgt,cfgtot):
@@ -55,9 +55,9 @@ def load_repo(i,key,cfgt,cfgtot):
     temp['repo']=repos.lst[cfgt['type']](cfgt['path'],cfgtot)
     temp['Status']=temp['repo'].get_status_text()
     temp['Actions']=temp['repo'].get_actions_text(i)
-    temp['LastModified']=time.ctime(temp['repo'].lastmodified)    
+    temp['LastModified']=time.ctime(temp['repo'].lastmodified)
     return temp
-    
+
 def load_repo_list(cfg,cfgtot):
     lst=[]
     for i,key in enumerate(cfg):
@@ -86,7 +86,7 @@ def str_time(t):
 def get_repo(i,repo_list):
     res=[repo for repo in repo_list if repo['index']==i]
     return res[0]
- 
+
 
 
 def get_label(t,text,n):
@@ -94,57 +94,62 @@ def get_label(t,text,n):
     if n:
         txt=labelbadge_fmt.format(t=t,text=text,num=n)
     else:
-        txt=labelbadge_fmt.format(t='success',text=text,num=n)      
+        txt=labelbadge_fmt.format(t='success',text=text,num=n)
     return txt
-    
+
 def get_stats(repo_list):
     lastmod=0
     nbmod=0
     toup=0
     tadd=0
     tconf=0
-      
-        
+    topull=0
+    topush=0
+
     for repo in repo_list:
         lastmod=max(lastmod,repo['repo'].lastmodified)
         nbmod+=repo['repo'].stats['M']
         toup+=repo['repo'].stats['SM']+ repo['repo'].stats['SA']
+        if repo['repo'].stats['SM']+ repo['repo'].stats['SA']>0:
+            print(repo)
+            print(repo['repo'].stats)
+
         tadd+=repo['repo'].stats['A']
         tconf+=repo['repo'].stats['C']
-        
-        
-         
+        if repo['type']=='git':
+            topull+=repo['repo'].stats['bdelta']
+            topush+=repo['repo'].stats['adelta']
+
     return [['Last modified',str_time(lastmod)],
              ['Nb. repos.',len(repo_list)],
-             ['Total modified',get_label('warning','Modified',nbmod)],
-              ['Total Added',get_label('warning','Added',tadd)],
-              [ 'Total Conflicts',get_label('danger','Conflicts',tconf)],               
-              [ 'Total to update',get_label('danger','To update',toup)] ]    
+             ['Total modified/added/commits',get_label('warning','Modified',nbmod)+get_label('warning','Added',tadd)+get_label('warning','To push',topush)],
+              [ 'Total Conflicts',get_label('danger','Conflicts',tconf)],
+              [ 'Total to update/pull',get_label('danger','To update',toup)+get_label('danger','To push',topull)] ]
 
-class MainHandler(tornado.web.RequestHandler): 
-    
+class MainHandler(tornado.web.RequestHandler):
+
     def initialize(self, repo_list,glob):
-        
+
         self.glob = glob
         self.repo_list = repo_list
-        
+
     def alert(self,message='',atype='atype'):
         self.glob['message']=message
-        self.glob['atype']=atype       
-    
+        self.glob['atype']=atype
+
     def get(self):
         update_status(self.repo_list)
         self.render("dashboard.html",content='welcome!',repo_list=self.repo_list,alert=self.glob['message'],atype=self.glob['atype'],stats=get_stats(self.repo_list))
         self.glob['message']=''
         self.glob['atype']='info'
 
-class RepoHandler(tornado.web.RequestHandler): 
-    
+class RepoHandler(tornado.web.RequestHandler):
+
     def initialize(self, repo_list,glob):
-        
+
         self.glob = glob
         self.repo_list = repo_list
-    
+
     def get(self):
         update_status(self.repo_list)
         index=int(self.get_argument("repo"))
@@ -157,17 +162,17 @@ def save_config(path,configobj):
     f=codecs.open(path, "w+", "utf8")
     configobj.write(f)
     f.close()
-        
-class ActionHandler(MainHandler): 
-    
+
+class ActionHandler(MainHandler):
+
     def initialize(self, repo_list,glob):
         self.glob=glob
         self.repo_list = repo_list
-    
+
     def get(self):
         action=self.get_argument("action")
         if action=='update':
-            self.redirect('/')  
+            self.redirect('/')
         elif action=='commit':
             index=int(self.get_argument("repo"))
             repo=get_repo(index,self.repo_list)
@@ -177,16 +182,16 @@ class ActionHandler(MainHandler):
         elif action=='new':
             self.render("new.html")
             self.glob['message']=''
-            self.glob['atype']='info'  
+            self.glob['atype']='info'
         elif action=='settings':
             self.render("settings.html",config=self.glob['config'])
             self.glob['message']=''
-            self.glob['atype']='info'               
+            self.glob['atype']='info'
         else:
             self.glob['message']='<strong>Error: </strong> Unknown action '
             self.glob['atype']='danger'
-            self.redirect('/')              
-        
+            self.redirect('/')
+
     def post(self):
         update_status(self.repo_list)
         action=self.get_argument("action",'')
@@ -205,7 +210,7 @@ class ActionHandler(MainHandler):
             #self.render("output.html",title='Update',alert='',output=message,repo=repo)
             self.glob['message']=u'Pull Repo <strong>{} </strong>: \n <pre class="bg-warning">{}</pre>'.format(repo['Name'],message)
             self.glob['atype']='warning'
-            self.redirect('/')   
+            self.redirect('/')
         elif action=='push':
             index=int(self.get_argument("repo"))
             repo=get_repo(index,self.repo_list)
@@ -213,14 +218,14 @@ class ActionHandler(MainHandler):
             #self.render("output.html",title='Update',alert='',output=message,repo=repo)
             self.glob['message']=u'Push Repo <strong>{} </strong>: \n <pre class="bg-warning">{}</pre>'.format(repo['Name'],message)
             self.glob['atype']='warning'
-            self.redirect('/')              
+            self.redirect('/')
         elif action=='status':
             update_status(self.repo_list,1)
             self.glob['message']='<strong>Info: </strong> All distant repository checked'
             self.glob['atype']='info'
-            self.redirect('/')  
+            self.redirect('/')
         elif action=='new':
-            message='<strong>Info: </strong></br><pre class="bg-info">'           
+            message='<strong>Info: </strong></br><pre class="bg-info">'
             name=self.get_argument("name")
             path=self.get_argument("path")
             tp=self.get_argument("type")
@@ -243,16 +248,16 @@ class ActionHandler(MainHandler):
                 message+='Error: Repo name empty'
             self.glob['message']=message
             self.glob['atype']='info'
-            self.redirect('/')  
+            self.redirect('/')
         elif action=='commit':
             index=int(self.get_argument("repo"))
             repo=get_repo(index,self.repo_list)
             textcommit=self.get_argument("commit-text")
-            lstfiles=[v[0].decode('utf-8') for k,v in self.request.arguments.items() if 'file' in k]  
+            lstfiles=[v[0].decode('utf-8') for k,v in self.request.arguments.items() if 'file' in k]
             outtext=repo['repo'].commit(textcommit,lstfiles)
             self.glob['message']='Commit for <strong> {}</strong> :\n</br><pre class="bg-info"> Commit text:\n {}\nOutput:\n{}</pre>'.format(repo['Name'],textcommit,outtext)
             self.glob['atype']='info'
-            self.redirect('/')              
+            self.redirect('/')
         elif action=='open':
             index=int(self.get_argument("repo"))
             repo=get_repo(index,self.repo_list)
@@ -270,7 +275,7 @@ class ActionHandler(MainHandler):
         else:
             self.glob['message']='<strong>Error: </strong> Unknown action '
             self.glob['atype']='danger'
-            self.redirect('/')           
+            self.redirect('/')
 
         #self.redirect('/')
 
@@ -288,12 +293,12 @@ def callback_repo(repo,action):
     if action=='infos':
         repo['repo'].infos()
         repo['LastModified']=time.ctime(repo['repo'].lastmodified)
-        
+
 def start_periodic_callbacks(repo_list):
     def myfunc(repo,action):
         #print("Callback for Repo: {}, Action: {}".format(repo['Name'],action))
         callback_repo(repo,action)
-    lst=[]   
+    lst=[]
     for repo in repo_list:
         for action,delta in zip(repo['config']['actions'].split(','),[int(t)*1000 for t in repo['config']['periods'].split(',')]):
             #print(u"Repo: {}, Action: {}, Period: {}s".format(repo['Name'],action,delta/1000))
@@ -303,7 +308,7 @@ def start_periodic_callbacks(repo_list):
 
     return lst
 
-    
+
 def check_configfiles():
     configpath=os.path.expanduser('~/.config/repohub/')
     repopath=configpath+'repos.ini'
@@ -314,12 +319,12 @@ def check_configfiles():
         f=open(cfpath, 'a')
         f.write(default_config)
         f.close()
-        
+
     return repopath,cfpath
 
 
 def make_app():
-    
+
     # load config and repos
     repopath,cfpath=check_configfiles()
     cfg=load_config(cfpath)
@@ -334,11 +339,11 @@ def make_app():
     glob['config']=cfg[0]
     glob['reposcfg']=cfgrepos[1]
     glob['reposcfg'].filename=repopath
-    glob['configcfg']=cfg[1]    
-    
-    
+    glob['configcfg']=cfg[1]
+
+
     glob['periodic_callbacks']=start_periodic_callbacks(repo_list)
-    
+
     return tornado.web.Application([
         (r"/", MainHandler,{'repo_list':repo_list,'glob':glob}),
   #      (r"/open", OpenHandler,{'repo_list':repo_list,'glob':glob}),
@@ -350,7 +355,7 @@ def make_app():
         (r"/fonts/(.*)",tornado.web.StaticFileHandler, {"path": static_path+"fonts"},),
     ],template_path=template_path),cfg[0]
 
-       
+
 def start():
     app,config = make_app()
     app.listen(int(config['Server']['listen-port']))
