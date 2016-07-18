@@ -120,7 +120,7 @@ def get_stats(repo_list):
              ['Nb. repos.',len(repo_list)],
              ['Total modified/added/commits',get_label('warning','Modified',nbmod)+get_label('warning','Added',tadd)+get_label('warning','To push',topush)],
               [ 'Total Conflicts',get_label('danger','Conflicts',tconf)],
-              [ 'Total to update/pull',get_label('danger','To update',toup)+get_label('danger','To push',topull)] ]
+              [ 'Total to update/pull',get_label('danger','To update',toup)+get_label('danger','To pull',topull)] ]
 
 class MainHandler(tornado.web.RequestHandler):
 
