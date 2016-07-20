@@ -14,7 +14,11 @@ Automatic monitoring of local repositories (svn,git).
 - [x] Update/Commit from the web interface.
 - [ ] Edit settings/repositories from web interface.
 - [ ] Add files button.
-- 
+- [ ] Peridoc local update + shortcut.
+- [ ] Commit/Push button for git
+- [ ] Fast reload (selected update)
+
+
 ## Install
 
 The software requires the following software and python libraries  (for Python 3):
@@ -26,7 +30,7 @@ The software requires the following software and python libraries  (for Python 3
 
 under ubuntu you need only install the following:
 ```
-sudo apt-get install python3-tornado
+sudo apt-get install python3-tornado python3-git
 ```
 
 To run the RepoHub server just execute the file ```./repohub``` in the root folder.
