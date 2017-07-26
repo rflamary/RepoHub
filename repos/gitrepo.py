@@ -125,6 +125,22 @@ def git_commit_delta(rep,remote=False):
         rep.git.remote('update')
     remote_branch=rep.git.config('--get','branch.{branch}.remote'.format(branch=branch))
     try:
+        adelta=int(rep.git.rev_list('--count','{remote_branch}/{branch}..HEAD'.format(remote_branch=remote_branch,branch=branch)))
+        bdelta=int(rep.git.rev_list('--count','HEAD..{remote_branch}/{branch}'.format(remote_branch=remote_branch,branch=branch)))
+        #adelta=int(rep.git.rev_list('--count','{remote_branch}/{branch}..HEAD'.format(remote_branch=remote_branch,branch=branch)))
+        #bdelta=int(rep.git.rev_list('--count','HEAD..{remote_branch}//{branch}'.format(remote_branch=remote_branch,branch=branch)))
+    except git.GitCommandError:
+        adelta=0
+        bdelta=0
+        print('Warning: unable to get delta with remote')
+    return [adelta,bdelta]
+
+def git_commit_delta2(path,remote=False):
+    branch=git_get_branch(rep)
+    if remote:
+        rep.git.remote('update')
+    remote_branch=rep.git.config('--get','branch.{branch}.remote'.format(branch=branch))
+    try:
         adelta=int(rep.git.rev_list('--count','{remote_branch}..HEAD'.format(remote_branch=remote_branch)))
         bdelta=int(rep.git.rev_list('--count','HEAD..{remote_branch}'.format(remote_branch=remote_branch)))
     except git.GitCommandError:
@@ -132,6 +148,8 @@ def git_commit_delta(rep,remote=False):
         bdelta=0
         print('Warning: unable to get delta with remote')
     return [adelta,bdelta]
+
+
 
 def git_commit(rep,message='',files=[]):
     index = rep.index
